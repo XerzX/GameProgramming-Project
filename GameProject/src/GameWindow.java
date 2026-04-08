@@ -13,13 +13,17 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 	private GraphicsDevice userDevice;
 	private int pWidth, pHeight;
 	
+	private Graphics gScr;
 	private BufferStrategy bufferStrategy;
+	
 	private BufferedImage bufferedImage;
 	
 	private Thread gameThread = null;
 	
 	private volatile Boolean isRunning = false;
 	private volatile Boolean isPaused = false;
+	
+	private Player player;
 	
 	public GameWindow() {
 		super("Insert Title Here");
@@ -29,11 +33,12 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 		addMouseListener(this);
 		addMouseMotionListener(this);
 		
-		bufferedImage = new BufferedImage(pWidth, pHeight, BufferedImage.TYPE_INT_RGB);
-		
 		// Instantiate Singleton Utility Classes
 		SoundManager.getInstance();
 		ImageManager.getInstance();
+		
+		// Buffer For Each Frame
+		bufferedImage = new BufferedImage(pWidth, pHeight, BufferedImage.TYPE_INT_RGB);
 		
 		startGame();
 	}
@@ -67,23 +72,65 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 		bufferStrategy = getBufferStrategy();
 	}
 	
-	private void startGame() {
-		if (gameThread == null) {
-			gameThread = new Thread(this);
-			gameThread.start();
-		}
+	private void createEntities() {
+		player = new Player(this);
 	}
 	
 	// Updates The Position Of Game Entities
 	private void gameUpdate() {
-		// TODO Auto-generated method stub
-			
-	}
 		
-	// Renders Updated Entities To The Screen
+	}
+	
+	// Update Player Position
+	private void updatePlayer(int direction) {
+		player.move(direction);
+	}	
+	
 	private void screenUpdate() {
-		// TODO Auto-generated method stub
-			
+		try {
+			gScr = bufferStrategy.getDrawGraphics();
+			gameRender(gScr);
+			gScr.dispose();
+			if (!bufferStrategy.contentsLost())
+				bufferStrategy.show();
+			else
+				System.out.println("Contents of buffer lost.");
+      
+			// Sync the display on some systems.
+			// (on Linux, this fixes event queue problems)
+
+			Toolkit.getDefaultToolkit().sync();
+		}
+		catch (Exception e) { 
+			e.printStackTrace();  
+			isRunning = false; 
+		}
+	}
+	
+	// Renders Updated Entities To The Screen
+	public void gameRender (Graphics gScr) {
+		Graphics2D imageContext = (Graphics2D) bufferedImage.getGraphics();
+		
+		// 1 - Render Background
+		imageContext.clearRect(0, 0, getWidth(), getHeight());
+		
+		// N - Render Player
+		player.draw(imageContext);
+		
+		Graphics2D g2 = (Graphics2D) gScr;
+		g2.drawImage(bufferedImage, 0, 0, pWidth, pHeight, null);
+		
+		imageContext.dispose();
+		g2.dispose();
+	}
+	
+	private void startGame() {
+		createEntities();
+		
+		if (gameThread == null) {
+			gameThread = new Thread(this);
+			gameThread.start();
+		}
 	}
 	
 	// The run() Method Serves As The Game Loop
@@ -112,61 +159,64 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 	
 	@Override
 	public void mouseDragged(MouseEvent e) {
-		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public void mouseMoved(MouseEvent e) {
-		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public void mouseClicked(MouseEvent e) {
-		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public void mouseEntered(MouseEvent e) {
-		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public void mouseExited(MouseEvent e) {
-		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public void mousePressed(MouseEvent e) {
-		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
-		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public void keyPressed(KeyEvent e) {
-		// TODO Auto-generated method stub
+		int code = e.getKeyCode();
 		
+		if (code == KeyEvent.VK_LEFT) {
+			updatePlayer(1);
+		}
+		if (code == KeyEvent.VK_RIGHT) {
+			updatePlayer(2);
+		}
+		if (code == KeyEvent.VK_UP) {
+			updatePlayer(3);
+		}
+		if (code == KeyEvent.VK_DOWN) {
+			updatePlayer(4);
+		}
 	}
 
 	@Override
 	public void keyReleased(KeyEvent e) {
-		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public void keyTyped(KeyEvent e) {
-		// TODO Auto-generated method stub
 		
 	}
 }
