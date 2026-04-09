@@ -24,6 +24,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 	private volatile Boolean isPaused = false;
 	
 	private Player player;
+	private SolidObjectManager soManager;
 	
 	public GameWindow() {
 		super("Insert Title Here");
@@ -73,12 +74,13 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 	}
 	
 	private void createEntities() {
-		player = new Player(this);
+		soManager = new SolidObjectManager(this);
+		player = new Player(this, soManager);
 	}
 	
 	// Updates The Position Of Game Entities
 	private void gameUpdate() {
-		
+		player.update();
 	}
 	
 	// Update Player Position
@@ -98,7 +100,6 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
       
 			// Sync the display on some systems.
 			// (on Linux, this fixes event queue problems)
-
 			Toolkit.getDefaultToolkit().sync();
 		}
 		catch (Exception e) { 
@@ -113,6 +114,9 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 		
 		// 1 - Render Background
 		imageContext.clearRect(0, 0, getWidth(), getHeight());
+		
+		// 2 - Render Solid Objects
+		soManager.draw(imageContext);
 		
 		// N - Render Player
 		player.draw(imageContext);
@@ -202,11 +206,8 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 		if (code == KeyEvent.VK_RIGHT) {
 			updatePlayer(2);
 		}
-		if (code == KeyEvent.VK_UP) {
+		if (code == KeyEvent.VK_SPACE) {
 			updatePlayer(3);
-		}
-		if (code == KeyEvent.VK_DOWN) {
-			updatePlayer(4);
 		}
 	}
 
