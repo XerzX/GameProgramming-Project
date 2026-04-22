@@ -7,11 +7,17 @@ public class Background {
 	
 	private Image bgImage;
   	
+	private int xPos;
+	private int yPos;
+	
 	private int width;
 	private int height;
 
-	public Background(String imageFile) {
+	public Background(String imageFile, int xPos, int yPos) {
     	this.bgImage = ImageManager.getInstance().loadImage(imageFile).getImage();
+    	
+    	this.xPos = xPos;
+    	this.yPos = yPos;
     	
     	width = bgImage.getWidth(null);
     	height = bgImage.getHeight(null);
@@ -22,7 +28,7 @@ public class Background {
   	}
 
   	public void draw (Graphics2D g2) {
-		g2.drawImage(bgImage, 0, 0, null);
+		g2.drawImage(bgImage, xPos, yPos, null);
   	}
   	
   	public int getWidth() {

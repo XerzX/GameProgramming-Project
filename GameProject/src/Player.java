@@ -98,14 +98,14 @@ public class Player {
 	        jumping = true;
 	        timeElapsed = 0;
 	        startY = yPos;
-	        initialVelocity = 75; // Adjust This For Jump Height
+	        initialVelocity = 50; // Adjust This For Jump Height. If Too Will Cause Bug Preventing Collision Checks
 	    }
 	}
 	
 	private void checkFalling() {
 	    if (!jumping && !inAir) {
 	        // Create A Small Rectangle Below The Player's Feet
-	        Rectangle2D.Double feet = new Rectangle2D.Double(xPos, yPos + height + 1, width, 2);
+	        Rectangle2D.Double feet = new Rectangle2D.Double(xPos, yPos + (height + 1), width, 2);
 	        
 	        if (soManager.collidesWith(feet) == null) {
 	            startFall();
@@ -123,6 +123,15 @@ public class Player {
 
 	    // ALWAYS Resolve Collisions After Moving
 	    resolveCollisions();
+	    
+	    // HARD LIMIT: Prevent falling below the bottom of Floor 1
+	    int absoluteBottom = 672 - height; 
+	    if (yPos > absoluteBottom) {
+	        yPos = absoluteBottom;
+	        jumping = false;
+	        inAir = false;
+	        timeElapsed = 0;
+	    }
 	    
 	    // Check If Player Is In Mid-Air
 	    checkFalling();

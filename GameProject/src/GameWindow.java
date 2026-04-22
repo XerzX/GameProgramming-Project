@@ -30,10 +30,17 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 	private SolidObjectManager soManager;
 	
 	private Background background;
+	private BackgroundManager backgroundManager;
 	
 	// Define The World Dimensions
 	private int worldWidth = 1584;
 	private int worldHeight = 672;
+	
+	// 1st Floor Is In Positive Coordinate Space 0 - FloorHeight
+	// The Other 4 Floors Are In Negative Coordinate Space -(FloorHeight * 4) - 0
+	// Therefore, The Total Height The Player Or Camera Can Move To Is -(FloorHeight * 4)
+	
+	private int levelOneHeight = -(worldHeight * 4);
 	
 	public GameWindow() {
 		super("Insert Title Here");
@@ -47,6 +54,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 		
 		SoundManager.getInstance();
 		ImageManager.getInstance();
+		backgroundManager = BackgroundManager.getInstance();
 		
 		// Buffer For Each Frame
 		
@@ -93,7 +101,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 	}
 	
 	private void createEntities() {
-		background = new Background("/Assets/Background/Floor1.png");
+		background = new Background("/Assets/Background/Floor1.png", 0, 0);
 		soManager = new SolidObjectManager(this, worldWidth, worldHeight);
 		player = new Player(this, soManager);
 	}
@@ -140,8 +148,8 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 		if (camX < 0)
 			camX = 0;
 		
-	    if (camY < 0)
-	    	camY = 0;
+	    if (camY < levelOneHeight)
+	    	camY = levelOneHeight;
 	    
 	    if (camX > worldWidth - virtualWidth)
 	    	camX = worldWidth - virtualWidth;
@@ -156,6 +164,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 	    
 		// 1 - Render Background
 		background.draw(imageContext);
+		backgroundManager.drawBackgrounds(imageContext);
 		
 		// 2 - Render Solid Objects
 		soManager.draw(imageContext);
@@ -186,6 +195,11 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 		}
 	}
 	
+	private void stopGame() {
+		if(isRunning)
+			isRunning = false;
+	}
+	
 	// The run() Method Serves As The Game Loop
 	@Override
 	public void run() {
@@ -196,7 +210,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 					gameUpdate();
 				}
 				screenUpdate();
-				Thread.sleep(50);
+				Thread.sleep(16); // 16 ms Translates To Approximately 60 FPS
 			}
 		}
 		catch (InterruptedException e) {
@@ -248,6 +262,10 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 	@Override
 	public void keyPressed(KeyEvent e) {
 		int code = e.getKeyCode();
+		
+		if (code == KeyEvent.VK_C) {
+			stopGame();
+		}
 		
 		if (code == KeyEvent.VK_LEFT) {
 			updatePlayer(1);
