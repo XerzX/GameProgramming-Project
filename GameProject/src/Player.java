@@ -12,6 +12,7 @@ public class Player {
 	private ImageIcon playerSprite;
 	private ImageManager imageManager;
 	
+	// Player's World Coordinates
 	private int xPos;
 	private int yPos;
 	
@@ -36,6 +37,7 @@ public class Player {
 		imageManager = ImageManager.getInstance();
 		playerSprite = imageManager.loadImage("/Assets/Player/TestPlayer.png");
 		
+		// Set Player's World Coordinates
 		xPos = 0;
 		yPos = 0;
 		
@@ -77,7 +79,7 @@ public class Player {
 			}
 		}
 		
-		// Move Up
+		// Jump
 		if (direction == 3) {
 			startJump();
 		}
@@ -168,5 +170,19 @@ public class Player {
 	            xPos = (int)(objectRect.x + objectRect.width);
 	        }
 	    }
+	}
+	
+	public int getXPos() {
+		return xPos;
+	}
+	public int getYPos() {
+		return yPos;
+	}
+	
+	public int getWidth() {
+		return width;
+	}
+	public int getHeight() {
+		return height;
 	}
 }

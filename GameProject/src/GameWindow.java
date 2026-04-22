@@ -18,6 +18,9 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 	
 	private BufferedImage bufferedImage;
 	
+	private int virtualWidth;
+	private int virtualHeight;
+	
 	private Thread gameThread = null;
 	
 	private volatile Boolean isRunning = false;
@@ -25,6 +28,12 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 	
 	private Player player;
 	private SolidObjectManager soManager;
+	
+	private Background background;
+	
+	// Define The World Dimensions
+	private int worldWidth = 1584;
+	private int worldHeight = 672;
 	
 	public GameWindow() {
 		super("Insert Title Here");
@@ -35,11 +44,21 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 		addMouseMotionListener(this);
 		
 		// Instantiate Singleton Utility Classes
+		
 		SoundManager.getInstance();
 		ImageManager.getInstance();
 		
 		// Buffer For Each Frame
-		bufferedImage = new BufferedImage(pWidth, pHeight, BufferedImage.TYPE_INT_RGB);
+		
+		// A Virtual Resolution Is Used To Achieve Scrolling With FSEM
+		// The BufferedImage Is A Smaller Resolution Than The World
+		// Entities Are Drawn To The World, But This Smaller "Camera" Sees Only Part Of The World
+		// The Entire Thing Will Be Scaled Up To Match The Monitor's Resolution
+		
+		virtualWidth = worldWidth - 300;
+		virtualHeight = worldHeight;
+		
+		bufferedImage = new BufferedImage(virtualWidth, virtualHeight, BufferedImage.TYPE_INT_RGB);
 		
 		startGame();
 	}
@@ -74,7 +93,8 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 	}
 	
 	private void createEntities() {
-		soManager = new SolidObjectManager(this);
+		background = new Background("/Assets/Background/Floor1.png");
+		soManager = new SolidObjectManager(this, worldWidth, worldHeight);
 		player = new Player(this, soManager);
 	}
 	
@@ -112,8 +132,30 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 	public void gameRender (Graphics gScr) {
 		Graphics2D imageContext = (Graphics2D) bufferedImage.getGraphics();
 		
+		// Calculate Camera Position Relative To Player (Centered On Player)
+		int camX = ( player.getXPos() + (player.getWidth() / 2) ) - (virtualWidth / 2);
+		int camY = ( player.getYPos() + (player.getHeight() / 2) ) - (virtualHeight / 2);
+		
+		// Clamp Camera (Prevent Camera From Going Beyond World Dimensions)
+		if (camX < 0)
+			camX = 0;
+		
+	    if (camY < 0)
+	    	camY = 0;
+	    
+	    if (camX > worldWidth - virtualWidth)
+	    	camX = worldWidth - virtualWidth;
+	    
+	    if (camY > worldHeight - virtualHeight)
+	    	camY = worldHeight - virtualHeight;
+		
+	    // Shift The World And Entities Drawn On For Scrolling
+	    imageContext.translate(-camX, -camY);
+		
+	    // Z-Ordering Of Entities
+	    
 		// 1 - Render Background
-		imageContext.clearRect(0, 0, getWidth(), getHeight());
+		background.draw(imageContext);
 		
 		// 2 - Render Solid Objects
 		soManager.draw(imageContext);
@@ -121,11 +163,18 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 		// N - Render Player
 		player.draw(imageContext);
 		
-		Graphics2D g2 = (Graphics2D) gScr;
-		g2.drawImage(bufferedImage, 0, 0, pWidth, pHeight, null);
+		// Reset Translation For HUD/UI Elements
+		imageContext.translate(camX, camY);
+		
+		// 
+		// Render UI Elements Here
+		//
 		
 		imageContext.dispose();
-		g2.dispose();
+		
+		Graphics2D g2 = (Graphics2D) gScr;
+		
+		g2.drawImage(bufferedImage, 0, 0, pWidth, pHeight, null);
 	}
 	
 	private void startGame() {

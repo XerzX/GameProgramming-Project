@@ -8,14 +8,20 @@ public class SolidObjectManager {
 	
 	private JFrame gameWindow;
 	private SolidObject[] solidObjects;
+	
+	private int worldWidth;
+	private int worldHeight;
   
-   public SolidObjectManager(JFrame gameWindow) {
+   public SolidObjectManager(JFrame gameWindow, int worldWidth, int worldHeight) {
 	  this.gameWindow = gameWindow;
+	  
+	  this.worldWidth = worldWidth;
+	  this.worldHeight = worldHeight;
       
 	  solidObjects = new SolidObject[1];
       
 	  // Floor
-      solidObjects[0] = new SolidObject (0, gameWindow.getHeight() - 50, gameWindow.getWidth(), 50, new Color(0, 0, 0, 0));
+      solidObjects[0] = new SolidObject (0, this.worldHeight - 10, this.worldWidth, 50, new Color(0, 0, 0, 0));
    }
 
 
