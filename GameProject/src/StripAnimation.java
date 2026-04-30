@@ -22,19 +22,20 @@ public class StripAnimation {
 		// Load Image From Strip File
 		Image stripImage = ImageManager.getInstance().loadImage(filePath).getImage();
 
-		imageWidth = (int) stripImage.getWidth(null) / 6;
+		imageWidth  = stripImage.getWidth(null) / outerBound; // use the actual frame count
 		imageHeight = stripImage.getHeight(null);
 
 		for (int i = 0; i < outerBound; i++) {
 
-			BufferedImage frameImage = new BufferedImage (imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
+			BufferedImage frameImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
 			Graphics2D g = (Graphics2D) frameImage.getGraphics();
-     
-			g.drawImage(stripImage, 
+
+			g.drawImage(stripImage,
 					0, 0, imageWidth, imageHeight,
-					i*imageWidth, 0, (i*imageWidth)+imageWidth, imageHeight,
+					i * imageWidth, 0, (i + 1) * imageWidth, imageHeight,
 					null);
 
+			g.dispose(); // release native graphics resource
 			animation.addFrame(frameImage, 100);
 		}
 	}
