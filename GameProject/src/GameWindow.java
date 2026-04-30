@@ -50,10 +50,11 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 		addMouseListener(this);
 		addMouseMotionListener(this);
 		
-		// Instantiate Singleton Utility Classes
+		// Instantiate Singleton Classes
 		
 		SoundManager.getInstance();
 		ImageManager.getInstance();
+		ElevatorManager.getInstance();
 		backgroundManager = BackgroundManager.getInstance();
 		
 		// Buffer For Each Frame
@@ -64,7 +65,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 		// The Entire Thing Will Be Scaled Up To Match The Monitor's Resolution
 		
 		virtualWidth = worldWidth - 300;
-		virtualHeight = worldHeight;
+		virtualHeight = worldHeight + 145;
 		
 		bufferedImage = new BufferedImage(virtualWidth, virtualHeight, BufferedImage.TYPE_INT_RGB);
 		
@@ -103,15 +104,12 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 	private void createEntities() {
 		background = new Background("/Assets/Background/Floor1.png", 0, 0);
 		soManager = new SolidObjectManager(this, worldWidth, worldHeight);
-		player = new Player(this, soManager);
-		//////////////////
-		ElevatorManager.getInstance(); // initializes elevators
+		player = new Player(this, soManager, worldWidth, worldHeight);
 	}
 	
 	// Updates The Position Of Game Entities
 	private void gameUpdate() {
 		player.update();
-		ProjectileManager.getInstance().update(worldWidth);  //////////////////////
 	}
 	
 	// Update Player Position
@@ -143,9 +141,15 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 	public void gameRender (Graphics gScr) {
 		Graphics2D imageContext = (Graphics2D) bufferedImage.getGraphics();
 		
-		// Calculate Camera Position Relative To Player (Centered On Player)
+		// Calculate Camera X Position Relative To Player (Centered On Player)
 		int camX = ( player.getXPos() + (player.getWidth() / 2) ) - (virtualWidth / 2);
-		int camY = ( player.getYPos() + (player.getHeight() / 2) ) - (virtualHeight / 2);
+
+		// Calculate Camera Y Position Relative To Each Floor
+		int floor = (int)Math.floor((double) player.getYPos() / worldHeight);
+		int floorTopY = floor * worldHeight;
+		int offset = 145;
+
+		int camY = floorTopY - offset;
 		
 		// Clamp Camera (Prevent Camera From Going Beyond World Dimensions)
 		if (camX < 0)
@@ -157,8 +161,8 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 	    if (camX > worldWidth - virtualWidth)
 	    	camX = worldWidth - virtualWidth;
 	    
-	    if (camY > worldHeight - virtualHeight)
-	    	camY = worldHeight - virtualHeight;
+	    if (camY > 0)
+	    	camY = 0;
 		
 	    // Shift The World And Entities Drawn On For Scrolling
 	    imageContext.translate(-camX, -camY);
@@ -171,21 +175,16 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 		
 		// 2 - Render Solid Objects
 		soManager.draw(imageContext);
+        
+		// 3 - Render Elevators
+        ElevatorManager.getInstance().draw(imageContext);
 
-
-		///////////////////////////
-            // 3 - Render Elevators
-            ElevatorManager.getInstance().draw(imageContext);
-
-			// 4 - Render Projectiles
-ProjectileManager.getInstance().draw(imageContext);
-
-// 4 - "Press E" prompt if near elevator
-            if (player.isNearElevator()) {
-                imageContext.setColor(java.awt.Color.WHITE);
-                imageContext.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 20));
-                imageContext.drawString("Press E to use elevator", player.getXPos() - 30, player.getYPos() - 20);
-            }
+		// 4 - "Press E" prompt if near elevator
+        if (player.isNearElevator()) {
+            imageContext.setColor(java.awt.Color.WHITE);
+            imageContext.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 20));
+            imageContext.drawString("Press E to use elevator", player.getXPos() - 30, player.getYPos() - 20);
+        }
 		
 		// N - Render Player
 		player.draw(imageContext);
@@ -295,19 +294,13 @@ ProjectileManager.getInstance().draw(imageContext);
 			updatePlayer(3);
 		}
 
-            if (code == KeyEvent.VK_E) {
-                player.interactWithElevator();
-            }
-
-			if (code == KeyEvent.VK_Z) {   // Z key fires — change to whatever you prefer
-    player.fire();
-}
+        if (code == KeyEvent.VK_E) {
+            player.interactWithElevator();
+        }
 
 		// if (code == KeyEvent.VK_C) {
 		// 	updateAttack(4);
 		// }
-
-		
 	}
 
 	@Override
