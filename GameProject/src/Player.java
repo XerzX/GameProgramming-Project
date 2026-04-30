@@ -1,7 +1,7 @@
-import javax.swing.ImageIcon;
-import javax.swing.JFrame;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
 
 public class Player {
 	
@@ -29,8 +29,18 @@ public class Player {
 	private int timeElapsed = 0;
 	private int startY;
 	private int initialVelocity = 0;
+
+	private ProjectileManager projectileManager;
+
+
+	/////////////////////////
+    private ElevatorManager elevatorManager;
+    private boolean nearElevator = false;
 	
 	public Player(JFrame gameWindow, SolidObjectManager soManager) {
+
+		projectileManager = ProjectileManager.getInstance();
+		
 		this.gameWindow = gameWindow;
 		this.soManager = soManager;
 		
@@ -46,6 +56,9 @@ public class Player {
 		
 		width = 408 / 3;
 		height = 612 / 3;
+
+
+		elevatorManager = ElevatorManager.getInstance();
 	}
 	
 	public void draw(Graphics2D g2) {
@@ -135,6 +148,8 @@ public class Player {
 	    
 	    // Check If Player Is In Mid-Air
 	    checkFalling();
+
+		nearElevator = elevatorManager.isNearElevator(getBoundingRectangle());
 	}
 	
 	public Rectangle2D.Double getBoundingRectangle() {
@@ -194,4 +209,40 @@ public class Player {
 	public int getHeight() {
 		return height;
 	}
+
+
+
+
+
+///////////////////////////////
+
+public void interactWithElevator() {
+    int targetSurfaceY = elevatorManager.tryInteract(getBoundingRectangle());
+    if (targetSurfaceY != Integer.MIN_VALUE) {
+        yPos = targetSurfaceY - height; // ← NEW: feet land exactly on floor surface
+        jumping         = false;
+        inAir           = false;
+        timeElapsed     = 0;
+        initialVelocity = 0;  // ← NEW: prevents leftover momentum
+        startY          = yPos; // ← NEW: anchors gravity formula to new position
+    }
 }
+
+
+public boolean isNearElevator() {
+    return elevatorManager.isNearElevator(getBoundingRectangle());
+}
+
+public void fire() {
+    int direction = facingLeft ? 1 : 2;
+    projectileManager.spawn(xPos, yPos, width, height, direction);
+}
+}
+
+
+// Add field:
+
+
+
+
+// Add method:

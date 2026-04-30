@@ -1,7 +1,6 @@
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
-
 import javax.swing.JFrame;
 
 public class SolidObjectManager {
@@ -11,6 +10,9 @@ public class SolidObjectManager {
 	
 	private int worldWidth;
 	private int worldHeight;
+
+	private static final int NUM_FLOORS  = 5;
+	private static final int FLOOR_HEIGHT = 672;
   
    public SolidObjectManager(JFrame gameWindow, int worldWidth, int worldHeight) {
 	  this.gameWindow = gameWindow;
@@ -18,10 +20,19 @@ public class SolidObjectManager {
 	  this.worldWidth = worldWidth;
 	  this.worldHeight = worldHeight;
       
-	  solidObjects = new SolidObject[1];
+	//   solidObjects = new SolidObject[1];
       
-	  // Floor
-      solidObjects[0] = new SolidObject (0, this.worldHeight - 10, this.worldWidth, 50, new Color(0, 0, 0, 0));
+	//   // Floor
+    //   solidObjects[0] = new SolidObject (0, this.worldHeight - 10, this.worldWidth, 50, new Color(0, 0, 0, 0));
+
+	solidObjects = new SolidObject[NUM_FLOORS]; // ← NEW constant NUM_FLOORS = 5
+
+for (int i = 0; i < NUM_FLOORS; i++) {
+    int floorY = FLOOR_HEIGHT * (1 - i) - 10; // ← NEW formula, matches BackgroundManager stacking
+    solidObjects[i] = new SolidObject(0, floorY, this.worldWidth, 50, new Color(0,0,0,0));
+}
+
+
    }
 
 

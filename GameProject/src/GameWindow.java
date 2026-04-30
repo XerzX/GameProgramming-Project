@@ -1,8 +1,8 @@
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
+import javax.swing.*;
 
 public class GameWindow extends JFrame implements Runnable, KeyListener,
 													MouseListener, MouseMotionListener
@@ -104,11 +104,14 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 		background = new Background("/Assets/Background/Floor1.png", 0, 0);
 		soManager = new SolidObjectManager(this, worldWidth, worldHeight);
 		player = new Player(this, soManager);
+		//////////////////
+		ElevatorManager.getInstance(); // initializes elevators
 	}
 	
 	// Updates The Position Of Game Entities
 	private void gameUpdate() {
 		player.update();
+		ProjectileManager.getInstance().update(worldWidth);  //////////////////////
 	}
 	
 	// Update Player Position
@@ -168,6 +171,21 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 		
 		// 2 - Render Solid Objects
 		soManager.draw(imageContext);
+
+
+		///////////////////////////
+            // 3 - Render Elevators
+            ElevatorManager.getInstance().draw(imageContext);
+
+			// 4 - Render Projectiles
+ProjectileManager.getInstance().draw(imageContext);
+
+// 4 - "Press E" prompt if near elevator
+            if (player.isNearElevator()) {
+                imageContext.setColor(java.awt.Color.WHITE);
+                imageContext.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 20));
+                imageContext.drawString("Press E to use elevator", player.getXPos() - 30, player.getYPos() - 20);
+            }
 		
 		// N - Render Player
 		player.draw(imageContext);
@@ -276,6 +294,20 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 		if (code == KeyEvent.VK_SPACE) {
 			updatePlayer(3);
 		}
+
+            if (code == KeyEvent.VK_E) {
+                player.interactWithElevator();
+            }
+
+			if (code == KeyEvent.VK_Z) {   // Z key fires — change to whatever you prefer
+    player.fire();
+}
+
+		// if (code == KeyEvent.VK_C) {
+		// 	updateAttack(4);
+		// }
+
+		
 	}
 
 	@Override
