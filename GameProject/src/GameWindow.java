@@ -299,9 +299,15 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 			player.interactWithElevator();
 		}
 
-		// if (code == KeyEvent.VK_C) {
-		// updateAttack(4);
-		// }
+		// Z — Melee attack
+		if (code == KeyEvent.VK_Z) {
+			player.attackMelee();
+		}
+
+		// X — Ranged attack
+		if (code == KeyEvent.VK_X) {
+			player.attackRanged();
+		}
 	}
 
 	@Override
@@ -312,6 +318,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 				|| code == KeyEvent.VK_SPACE) {
 			player.setIsIdle(true);
 			player.stopAnimation();
+			player.resetToDefaultIdle(); // revert to TestPlayer.png when movement stops
 		}
 	}
 

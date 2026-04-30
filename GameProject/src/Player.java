@@ -5,14 +5,36 @@ import javax.swing.JFrame;
 
 public class Player {
 
+	private enum PlayerState {
+		DEFAULT, // Normal idle → TestPlayer.png
+		MELEE, // After melee → MeleeIdle.png (while attack plays: Melee.png)
+		RANGED // After ranged → RangedIdle.png (while attack plays: Ranged.png)
+	}
+
+	private PlayerState state = PlayerState.DEFAULT;
+
 	// Reference To Window Player Will Drawn On
 	private JFrame gameWindow;
 	private SolidObjectManager soManager;
 
-	private ImageIcon playerSprite;
 	private ImageManager imageManager;
 
+	// Walk Animation
 	private StripAnimationHV walkAnimation;
+
+	// Idle Sprites
+	private ImageIcon defaultIdleSprite;
+	private ImageIcon meleeIdleSprite;
+	private ImageIcon rangedIdleSprite;
+
+	// Attack Sprites (static single-frame images)
+	private ImageIcon meleeAttackSprite;
+	private ImageIcon rangedAttackSprite;
+
+	// Counts down game ticks for how long the attack pose is displayed
+	// (30 ticks ≈ 500 ms at 60 fps). When it reaches 0, isAttacking clears.
+	private int attackTimer = 0;
+	private static final int ATTACK_DISPLAY_TICKS = 30;
 
 	// Player's World Coordinates
 	private int xPos;
@@ -39,17 +61,16 @@ public class Player {
 	private boolean nearElevator = false;
 
 	private boolean isIdle = true;
+	private boolean isAttacking = false;
 
 	public Player(JFrame gameWindow, SolidObjectManager soManager, int worldWidth, int worldHeight) {
 
 		this.gameWindow = gameWindow;
 		this.soManager = soManager;
-
 		this.worldWidth = worldWidth;
 		this.worldHeight = worldHeight;
 
 		imageManager = ImageManager.getInstance();
-		playerSprite = imageManager.loadImage("/Assets/Player/TestPlayer.png");
 
 		// Set Player's World Coordinates
 		xPos = 0;
@@ -61,38 +82,61 @@ public class Player {
 		width = 408 / 3;
 		height = 612 / 3;
 
+		// Load Idle Animations
+		defaultIdleSprite = imageManager.loadImage("/Assets/Player/TestPlayer.png");
+		meleeIdleSprite = imageManager.loadImage("/Assets/Player/MeleeIdle.png");
+		rangedIdleSprite = imageManager.loadImage("/Assets/Player/RangedIdle.png");
+
+		// Load Walk Animation
 		walkAnimation = new StripAnimationHV(true, "/Assets/Player/Strip.png", 2, 4);
+
+		// Load Attack Sprites (single static images, displayed for a time equal to
+		// ATTACK_DISPLAY_TICKS)
+		meleeAttackSprite = imageManager.loadImage("/Assets/Player/Melee.png");
+		rangedAttackSprite = imageManager.loadImage("/Assets/Player/Ranged.png");
 
 		elevatorManager = ElevatorManager.getInstance();
 	}
 
 	public void draw(Graphics2D g2) {
-		if (isIdle) {
-			if (facingLeft) {
-				// Mirror the idle sprite when facing left
-				g2.drawImage(playerSprite.getImage(), xPos, yPos, width, height, null);
-				return;
-			}
 
-			// Draw idle sprite normally when facing right
-			g2.drawImage(playerSprite.getImage(), xPos + width, yPos, -width, height, null);
+		// Move Frame
+		if (!isIdle) {
+			drawImage(g2, walkAnimation.getCurrentFrame());
+			return;
 		}
 
-		else {
-			if (facingLeft) {
-				// Mirror the walk animation when facing left
-				g2.drawImage(walkAnimation.getCurrentFrame(), xPos, yPos, width, height, null);
-				return;
+		// Attack Frame — shown while the attack timer is counting down
+		if (isAttacking) {
+			if (state == PlayerState.MELEE) {
+				drawImage(g2, meleeAttackSprite.getImage());
+			} else if (state == PlayerState.RANGED) {
+				drawImage(g2, rangedAttackSprite.getImage());
 			}
+			return;
+		}
 
-			// Draw walk animation normally when facing right
-			g2.drawImage(walkAnimation.getCurrentFrame(), xPos + width, yPos, -width, height, null);
+		// Idle Frame
+		switch (state) {
+			case MELEE -> drawImage(g2, meleeIdleSprite.getImage());
+			case RANGED -> drawImage(g2, rangedIdleSprite.getImage());
+			default -> drawImage(g2, defaultIdleSprite.getImage());
+		}
+	}
+
+	// Handling Drawing Player Sprite and Mirror It To Face Opposite Direction
+	private void drawImage(Graphics2D g2, java.awt.Image img) {
+		if (facingLeft) {
+			// Mirror horizontally: draw from right edge leftward with negative width
+			g2.drawImage(img, xPos + width, yPos, -width, height, null);
+		} else {
+			// Normal draw: sprite naturally faces right
+			g2.drawImage(img, xPos, yPos, width, height, null);
 		}
 	}
 
 	public void move(int direction) {
-		// Restart the animation each time a move key is pressed
-		// (it may have been stopped when the key was released previously)
+		// Restart the walk animation if it stopped (key was released previously)
 		if (!walkAnimation.isAnimationActive()) {
 			walkAnimation.start();
 		}
@@ -101,26 +145,38 @@ public class Player {
 		if (direction == 1) {
 			xPos -= dx;
 			facingLeft = true;
-
-			if (xPos <= 0) {
+			if (xPos <= 0)
 				xPos = 0;
-			}
 		}
 
 		// Move Right
 		if (direction == 2) {
 			xPos += dx;
 			facingLeft = false;
-
-			if (xPos + width > worldWidth) {
+			if (xPos + width > worldWidth)
 				xPos = worldWidth - width;
-			}
 		}
 
 		// Jump
 		if (direction == 3) {
 			startJump();
 		}
+	}
+
+	public void attackMelee() {
+		if (isAttacking)
+			return;
+		state = PlayerState.MELEE;
+		isAttacking = true;
+		attackTimer = ATTACK_DISPLAY_TICKS; // start countdown
+	}
+
+	public void attackRanged() {
+		if (isAttacking)
+			return;
+		state = PlayerState.RANGED;
+		isAttacking = true;
+		attackTimer = ATTACK_DISPLAY_TICKS; // start countdown
 	}
 
 	public void startAnimation() {
@@ -132,10 +188,21 @@ public class Player {
 	}
 
 	public void updateAnimation() {
-		if (!walkAnimation.isAnimationActive())
-			return;
+		// Update walk animation while the player is moving
+		if (!isIdle && walkAnimation.isAnimationActive()) {
+			walkAnimation.update();
+		}
 
-		walkAnimation.update();
+		// Count down the attack display timer each game tick.
+		// When it reaches 0 the attack pose ends and the
+		// matching idle sprite (MeleeIdle / RangedIdle) takes over.
+		if (isAttacking) {
+			attackTimer--;
+			if (attackTimer <= 0) {
+				isAttacking = false;
+				attackTimer = 0;
+			}
+		}
 	}
 
 	public void startFall() {
@@ -151,8 +218,7 @@ public class Player {
 			jumping = true;
 			timeElapsed = 0;
 			startY = yPos;
-			initialVelocity = 50; // Adjust This For Jump Height. If Too Will Cause Bug Preventing Collision
-									// Checks
+			initialVelocity = 50; // Adjust For Jump Height
 		}
 	}
 
@@ -160,7 +226,6 @@ public class Player {
 		if (!jumping && !inAir) {
 			// Create A Small Rectangle Below The Player's Feet
 			Rectangle2D.Double feet = new Rectangle2D.Double(xPos, yPos + (height + 1), width, 2);
-
 			if (soManager.collidesWith(feet) == null) {
 				startFall();
 			}
@@ -210,8 +275,7 @@ public class Player {
 			double overlapTop = playerRect.y + playerRect.height - objectRect.y;
 			double overlapBottom = objectRect.y + objectRect.height - playerRect.y;
 
-			// Find The Smallest Overlap
-			// That's The Direction The Collision Occurred
+			// Find The Smallest Overlap — That's The Direction The Collision Occurred
 			double minOverlap = Math.min(Math.min(overlapLeft, overlapRight),
 					Math.min(overlapTop, overlapBottom));
 
@@ -223,7 +287,7 @@ public class Player {
 			} else if (minOverlap == overlapBottom) {
 				// Hit Bottom Of Object (Bumped Head)
 				yPos = (int) (objectRect.y + objectRect.height);
-				startFall(); // Stop Upward Momentum And Start Falling
+				startFall();
 			} else if (minOverlap == overlapLeft) {
 				// Hit Left Side Of Object
 				xPos = (int) objectRect.x - width;
@@ -254,15 +318,22 @@ public class Player {
 		this.isIdle = isIdle;
 	}
 
+	public void resetToDefaultIdle() {
+		// Reset If No Attack Is Occuring
+		if (!isAttacking) {
+			state = PlayerState.DEFAULT;
+		}
+	}
+
 	public void interactWithElevator() {
 		int targetSurfaceY = elevatorManager.tryInteract(getBoundingRectangle());
 		if (targetSurfaceY != Integer.MIN_VALUE) {
-			yPos = targetSurfaceY - height; // ← NEW: feet land exactly on floor surface
+			yPos = targetSurfaceY - height;
 			jumping = false;
 			inAir = false;
 			timeElapsed = 0;
-			initialVelocity = 0; // ← NEW: prevents leftover momentum
-			startY = yPos; // ← NEW: anchors gravity formula to new position
+			initialVelocity = 0;
+			startY = yPos;
 		}
 	}
 
