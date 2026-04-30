@@ -65,7 +65,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 		// The Entire Thing Will Be Scaled Up To Match The Monitor's Resolution
 		
 		virtualWidth = worldWidth - 300;
-		virtualHeight = worldHeight;
+		virtualHeight = worldHeight + 145;
 		
 		bufferedImage = new BufferedImage(virtualWidth, virtualHeight, BufferedImage.TYPE_INT_RGB);
 		
@@ -141,9 +141,15 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 	public void gameRender (Graphics gScr) {
 		Graphics2D imageContext = (Graphics2D) bufferedImage.getGraphics();
 		
-		// Calculate Camera Position Relative To Player (Centered On Player)
+		// Calculate Camera X Position Relative To Player (Centered On Player)
 		int camX = ( player.getXPos() + (player.getWidth() / 2) ) - (virtualWidth / 2);
-		int camY = ( player.getYPos() + (player.getHeight() / 2) ) - (virtualHeight / 2);
+
+		// Calculate Camera Y Position Relative To Each Floor
+		int floor = (int)Math.floor((double) player.getYPos() / worldHeight);
+		int floorTopY = floor * worldHeight;
+		int offset = 145;
+
+		int camY = floorTopY - offset;
 		
 		// Clamp Camera (Prevent Camera From Going Beyond World Dimensions)
 		if (camX < 0)
@@ -155,8 +161,8 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 	    if (camX > worldWidth - virtualWidth)
 	    	camX = worldWidth - virtualWidth;
 	    
-	    if (camY > worldHeight - virtualHeight)
-	    	camY = worldHeight - virtualHeight;
+	    if (camY > 0)
+	    	camY = 0;
 		
 	    // Shift The World And Entities Drawn On For Scrolling
 	    imageContext.translate(-camX, -camY);
