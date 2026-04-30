@@ -21,6 +21,9 @@ public class Player {
 	
 	private int width;
 	private int height;
+
+	private int worldWidth;
+	private int worldHeight;
 	
 	private boolean facingLeft = false;
 	private boolean jumping = false;
@@ -29,20 +32,17 @@ public class Player {
 	private int timeElapsed = 0;
 	private int startY;
 	private int initialVelocity = 0;
-
-	private ProjectileManager projectileManager;
-
-
-	/////////////////////////
+	
     private ElevatorManager elevatorManager;
     private boolean nearElevator = false;
 	
-	public Player(JFrame gameWindow, SolidObjectManager soManager) {
-
-		projectileManager = ProjectileManager.getInstance();
+	public Player(JFrame gameWindow, SolidObjectManager soManager, int worldWidth, int worldHeight) {
 		
 		this.gameWindow = gameWindow;
 		this.soManager = soManager;
+
+		this.worldWidth = worldWidth;
+		this.worldHeight = worldHeight;
 		
 		imageManager = ImageManager.getInstance();
 		playerSprite = imageManager.loadImage("/Assets/Player/TestPlayer.png");
@@ -87,8 +87,8 @@ public class Player {
 			xPos += dx;
 			facingLeft = false;
 			
-			if (xPos + width > gameWindow.getWidth()) {
-				xPos = gameWindow.getWidth() - width;
+			if (xPos + width > worldWidth) {
+				xPos = worldWidth - width;
 			}
 		}
 		
@@ -210,39 +210,20 @@ public class Player {
 		return height;
 	}
 
+	public void interactWithElevator() {
+		int targetSurfaceY = elevatorManager.tryInteract(getBoundingRectangle());
+		if (targetSurfaceY != Integer.MIN_VALUE) {
+			yPos = targetSurfaceY - height; // ← NEW: feet land exactly on floor surface
+			jumping         = false;
+			inAir           = false;
+			timeElapsed     = 0;
+			initialVelocity = 0;  // ← NEW: prevents leftover momentum
+			startY          = yPos; // ← NEW: anchors gravity formula to new position
+		}
+	}
 
-
-
-
-///////////////////////////////
-
-public void interactWithElevator() {
-    int targetSurfaceY = elevatorManager.tryInteract(getBoundingRectangle());
-    if (targetSurfaceY != Integer.MIN_VALUE) {
-        yPos = targetSurfaceY - height; // ← NEW: feet land exactly on floor surface
-        jumping         = false;
-        inAir           = false;
-        timeElapsed     = 0;
-        initialVelocity = 0;  // ← NEW: prevents leftover momentum
-        startY          = yPos; // ← NEW: anchors gravity formula to new position
-    }
+	public boolean isNearElevator() {
+		return elevatorManager.isNearElevator(getBoundingRectangle());
+	}
 }
 
-
-public boolean isNearElevator() {
-    return elevatorManager.isNearElevator(getBoundingRectangle());
-}
-
-public void fire() {
-    int direction = facingLeft ? 1 : 2;
-    projectileManager.spawn(xPos, yPos, width, height, direction);
-}
-}
-
-
-// Add field:
-
-
-
-
-// Add method:

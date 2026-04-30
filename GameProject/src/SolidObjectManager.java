@@ -15,38 +15,33 @@ public class SolidObjectManager {
 	private static final int FLOOR_HEIGHT = 672;
   
    public SolidObjectManager(JFrame gameWindow, int worldWidth, int worldHeight) {
-	  this.gameWindow = gameWindow;
-	  
-	  this.worldWidth = worldWidth;
-	  this.worldHeight = worldHeight;
+		this.gameWindow = gameWindow;
+
+	  	this.worldWidth = worldWidth;
+	  	this.worldHeight = worldHeight;
       
 	//   solidObjects = new SolidObject[1];
       
 	//   // Floor
     //   solidObjects[0] = new SolidObject (0, this.worldHeight - 10, this.worldWidth, 50, new Color(0, 0, 0, 0));
 
-	solidObjects = new SolidObject[NUM_FLOORS]; // ← NEW constant NUM_FLOORS = 5
+		solidObjects = new SolidObject[NUM_FLOORS]; // ← NEW constant NUM_FLOORS = 5
 
-for (int i = 0; i < NUM_FLOORS; i++) {
-    int floorY = FLOOR_HEIGHT * (1 - i) - 10; // ← NEW formula, matches BackgroundManager stacking
-    solidObjects[i] = new SolidObject(0, floorY, this.worldWidth, 50, new Color(0,0,0,0));
-}
-
-
+		for (int i = 0; i < NUM_FLOORS; i++) {
+			int floorY = FLOOR_HEIGHT * (1 - i) - 10; // ← NEW formula, matches BackgroundManager stacking
+			solidObjects[i] = new SolidObject(0, floorY, this.worldWidth, 50, new Color(0,0,0,0));
+		}
    }
 
 
    public void draw(Graphics2D g2) {
-      
 	   for (int i = 0; i < solidObjects.length; i++) {
-    	  
     	  SolidObject solidObject = solidObjects[i];
     	  solidObject.draw (g2);
       }
    }
 
    public SolidObject collidesWith(Rectangle2D.Double boundingRectangle) {
-      
 	   for (int i = 0; i < solidObjects.length; i++) {
     	  
     	  SolidObject solidObject = solidObjects[i];
