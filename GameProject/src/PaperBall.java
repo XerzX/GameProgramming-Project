@@ -5,6 +5,9 @@ public class PaperBall {
 
     private int xPos;
     private int yPos;
+    
+    private int width = 50;
+    private int height = 50;
 
     private int worldWidth;
 
@@ -22,7 +25,7 @@ public class PaperBall {
         this.worldWidth = worldWidth;
 
         // Load PaperBall Rotating Animation
-        paperBallSprite = new StripAnimationHV(true, "/Assets/Player/paperball.png", 24, 1);
+        paperBallSprite = new StripAnimationHV(true, "/Assets/Projectiles/paperball.png", 24, 1);
 
         isActive = true;
     }
@@ -32,11 +35,11 @@ public class PaperBall {
             return;
 
         if (facingLeft)
-            g2.drawImage(paperBallSprite.getCurrentFrame(), xPos + paperBallSprite.getImageWidth(), yPos,
-                    -paperBallSprite.getImageWidth(), paperBallSprite.getImageHeight(), null);
+            g2.drawImage(paperBallSprite.getCurrentFrame(), xPos + width, yPos,
+                    -width, height, null);
         else
-            g2.drawImage(paperBallSprite.getCurrentFrame(), xPos, yPos, paperBallSprite.getImageWidth(),
-                    paperBallSprite.getImageHeight(), null);
+            g2.drawImage(paperBallSprite.getCurrentFrame(), xPos, yPos, width,
+                    height, null);
     }
 
     public void startAnimation() {
@@ -64,20 +67,28 @@ public class PaperBall {
         }
     }
 
-    public boolean collidesWithEnemy() {
-        Rectangle2D.Double paperBallRect = new Rectangle2D.Double(xPos, yPos, paperBallSprite.getImageWidth(),
-                paperBallSprite.getImageHeight());
+    public MiniBoss collidesWithEnemy() {
+        Rectangle2D.Double paperBallRect = new Rectangle2D.Double(xPos, yPos, width, height);
 
-        // Fix Check For Enemy HitBox Collision w/ PaperBall Here When Enemies Are Added
-        return paperBallRect.intersects(null);
+        // Check For Enemy HitBox Collision w/ PaperBall
+        for (MiniBoss boss : MiniBossManager.getInstance().getBosses()) {
+            if (!boss.isDead() && paperBallRect.intersects(boss.getBoundingRectangle())) {
+                return boss;
+            }
+        }
+        return null;
     }
 
     public void checkCollision() {
-        if (collidesWithEnemy()) {
+        MiniBoss hitBoss = collidesWithEnemy();
+        if (hitBoss != null) {
             stopAnimation();
             isActive = false;
+            hitBoss.takeDamage(15);
         }
+    }
 
-        // (Optional) Add Check For SolidObject Collision w/ PaperBall
+    public boolean isActive() {
+        return isActive;
     }
 }

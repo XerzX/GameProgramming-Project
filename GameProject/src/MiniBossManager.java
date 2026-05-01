@@ -7,7 +7,7 @@ public class MiniBossManager {
     private static MiniBossManager instance;
     private ArrayList<MiniBoss> bosses;
 
-    private int attackTimer    = 0;
+    private int attackTimer = 0;
     private int attackCooldown = 120;
 
     public static MiniBossManager getInstance() {
@@ -25,47 +25,52 @@ public class MiniBossManager {
         bosses.add(new FourthBoss(300, -1594));
     }
 
-   public void update(int worldWidth, Rectangle2D.Double playerRect) {
-    attackTimer++;
+    public void update(int worldWidth, Player player) {
+        attackTimer++;
 
-    int playerX = (int) playerRect.x;
-    int playerY = (int) playerRect.y;
+        Rectangle2D.Double playerRect = player.getBoundingRectangle();
+        int playerX = (int) playerRect.x;
+        int playerY = (int) playerRect.y;
 
-    for (int i = 0; i < bosses.size(); i++) {
-        MiniBoss boss = bosses.get(i);
+        for (int i = 0; i < bosses.size(); i++) {
+            MiniBoss boss = bosses.get(i);
 
-        if (!boss.isDead()) {
+            if (!boss.isDead()) {
 
-            // Activate boss when player intersects its bounding rectangle
-            if (!boss.isStarted() && boss.getTriggerZone().intersects(playerRect)) {
-    boss.startFight();
-}
+                // Activate boss when player intersects its bounding rectangle
+                if (!boss.isStarted() && boss.getTriggerZone().intersects(playerRect)) {
+                    boss.startFight(worldWidth);
+                }
 
-            double dist = Math.abs(boss.getBoundingRectangle().x - playerX);
+                double dist = Math.abs(boss.getBoundingRectangle().x - playerX);
 
-            boss.chasePlayer(playerX, playerY);
+                boss.chasePlayer(playerX, playerY);
 
-            if (boss.isStarted() && dist <= boss.getAttackRange() && attackTimer >= attackCooldown) {
-                decideAttack(boss, dist);
-                attackTimer = 0;
+                if (boss.isStarted() && dist <= boss.getAttackRange() && attackTimer >= attackCooldown) {
+                    decideAttack(boss, dist);
+                    attackTimer = 0;
+                }
+
             }
-
-            boss.update();
+            boss.update(player);
         }
     }
-}
 
-private void decideAttack(MiniBoss boss, double dist) {
+    private void decideAttack(MiniBoss boss, double dist) {
 
-    if (boss instanceof FirstBoss || boss instanceof ThirdBoss) {
-        boss.meleeAttack();
-    } 
-    else if (boss instanceof SecondBoss || boss instanceof FourthBoss) {
-        boss.projectileAttack();
+        if (boss instanceof FirstBoss || boss instanceof ThirdBoss) {
+            boss.meleeAttack();
+        } else if (boss instanceof SecondBoss || boss instanceof FourthBoss) {
+            boss.projectileAttack();
+        }
     }
-}
+
     public void draw(Graphics2D g2) {
         for (int i = 0; i < bosses.size(); i++)
             bosses.get(i).draw(g2);
+    }
+
+    public ArrayList<MiniBoss> getBosses() {
+        return bosses;
     }
 }

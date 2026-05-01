@@ -10,160 +10,174 @@ public class MiniBoss implements MiniBossBehaviour {
     protected int hp;
     protected int dx;
     protected boolean facingLeft = false;
-    protected boolean dead       = false;
+    protected boolean dead = false;
 
+    private int damageTimer = 0;
+    private BufferedImage tintedSprite = null;
+    private static final int DAMAGE_TINT_TICKS = 20;
 
-     protected Animation walkAnimation;
+    protected Animation walkAnimation;
     protected Animation meleeAnimation;
     protected Animation projectileAnimation;
     protected Animation currentAnimation;
 
-
     protected BufferedImage[] currentFrames;
     protected int currentFrame = 0;
-    protected int frameTimer   = 0;
-    protected int frameDelay   = 6;
+    protected int frameTimer = 0;
+    protected int frameDelay = 6;
 
-    protected int attackRange = 200; 
+    protected int attackRange = 200;
     protected int startBoundary = 300;
     protected boolean fightStarted = false;
 
-
-
-
-
-
- public MiniBoss(int x, int y, int width, int height, int hp, int speed) {
-        xPos        = x;
-        yPos        = y;
-        this.width  = width;
+    public MiniBoss(int x, int y, int width, int height, int hp, int speed) {
+        xPos = x;
+        yPos = y;
+        this.width = width;
         this.height = height;
-        this.hp     = hp;
-        dx          = speed;
+        this.hp = hp;
+        dx = speed;
         this.attackRange = attackRange;
     }
 
-    
-
     @Override
-    public void meleeAttack() {}
-
-    @Override
-    public void projectileAttack() {}
-
-    @Override
-    public void specialAttack() {}
-
-
-     public void chasePlayer(int playerX, int playerY) {
-
-         double dist = Math.abs(playerX - xPos);
-
-    if (!fightStarted) {
-        currentAnimation = walkAnimation; // stand idle .
-        return;
+    public void meleeAttack() {
     }
 
-
-
-
-
-    // Have MB Face toward player
-    if (playerX < xPos)
-        facingLeft = true;
-    else
-        facingLeft = false;
-
-    // Move toward player, stop when close enough to attack
-   
-
-    //chasing algorithm
-    if (dist > attackRange) {
-        if (facingLeft){
-            xPos -= dx;
-
-        } 
-        else{
-            xPos += dx;
-        }            
-
-      currentAnimation = walkAnimation;
+    @Override
+    public void projectileAttack() {
     }
 
-    if (xPos < 0) xPos = 0;
-    if (xPos + width > 1584) xPos = 1584 - width; 
+    @Override
+    public void specialAttack() {
     }
 
+    public void chasePlayer(int playerX, int playerY) {
 
+        double dist = Math.abs(playerX - xPos);
 
+        if (!fightStarted) {
+            currentAnimation = walkAnimation; // stand idle .
+            return;
+        }
 
- public void takeDamage(int amount) {
+        // Have MB Face toward player
+        if (playerX < xPos)
+            facingLeft = true;
+        else
+            facingLeft = false;
+
+        // Move toward player, stop when close enough to attack
+
+        // chasing algorithm
+        if (dist > attackRange) {
+            if (facingLeft) {
+                xPos -= dx;
+
+            } else {
+                xPos += dx;
+            }
+
+            currentAnimation = walkAnimation;
+        }
+
+        if (xPos < 0)
+            xPos = 0;
+        if (xPos + width > 1584)
+            xPos = 1584 - width;
+    }
+
+    public void takeDamage(int amount) {
         hp -= amount;
         if (hp <= 0)
             dead = true;
-        //then drop key 
+        // then drop key
+
+        if (!dead && currentAnimation != null) {
+            Image currentImage = currentAnimation.getImage();
+            if (currentImage != null) {
+                BufferedImage sprite = ImageManager.getInstance().toBufferedImage(currentImage);
+                tintedSprite = RedTintFX.getInstance().apply(sprite);
+                damageTimer = DAMAGE_TINT_TICKS;
+            }
+        }
     }
 
-    public void update() {
-        if (dead){
-             return;
-            }
+    private HealthDrop healthDrop = null;
 
-      if (currentAnimation != null)
+    public void update(Player player) {
+        if (healthDrop != null) {
+            healthDrop.update(player);
+        }
+
+        if (dead) {
+            return;
+        }
+
+        if (currentAnimation != null)
             currentAnimation.update();
-        
+
+        if (damageTimer > 0) {
+            damageTimer--;
+            if (damageTimer <= 0) {
+                tintedSprite = null;
+            }
+        }
     }
 
     public void draw(Graphics2D g2) {
-        if (dead){
-            return;
-        } 
-        if (currentAnimation == null){
-             return;
+        if (healthDrop != null) {
+            healthDrop.draw(g2);
         }
 
+        if (dead) {
+            return;
+        }
+        if (currentAnimation == null) {
+            return;
+        }
 
         Image frame = currentAnimation.getImage();
-        if (frame == null) return;
+        if (frame == null)
+            return;
+
+        Image drawFrame = (damageTimer > 0 && tintedSprite != null) ? tintedSprite : frame;
 
         if (facingLeft)
-            g2.drawImage(frame, xPos, yPos, width, height, null);
+            g2.drawImage(drawFrame, xPos, yPos, width, height, null);
         else
-            g2.drawImage(frame, xPos + width, yPos, -width, height, null); //No need for other images, just flip image using - sign
+            g2.drawImage(drawFrame, xPos + width, yPos, -width, height, null); // No need for other images, just flip image
+                                                                               // using - sign
     }
 
+    // Load strip animation
+    protected Animation loadStripAnimation(String path, int frameCount, boolean loop) {
+        Animation anim = new Animation(loop);
 
+        BufferedImage sheet = ImageManager.getInstance().loadBufferedImage(path);
 
+        if (sheet == null) {
+            System.out.println("Could not load strip: " + path);
+            return anim;
+        }
 
-    //Load strip animation 
-  protected Animation loadStripAnimation(String path, int frameCount, boolean loop) {
-    Animation anim = new Animation(loop);
+        int frameWidth = sheet.getWidth() / frameCount;
+        int frameHeight = sheet.getHeight();
 
-    BufferedImage sheet = ImageManager.getInstance().loadBufferedImage(path);
+        for (int i = 0; i < frameCount; i++) {
+            BufferedImage frameImage = new BufferedImage(frameWidth, frameHeight, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g = frameImage.createGraphics();
+            g.drawImage(sheet,
+                    0, 0, frameWidth, frameHeight,
+                    i * frameWidth, 0, (i + 1) * frameWidth, frameHeight,
+                    null);
+            g.dispose();
+            anim.addFrame(frameImage, 100);
+        }
 
-    if (sheet == null) {
-        System.out.println("Could not load strip: " + path);
-        return anim; 
+        anim.start();
+        return anim;
     }
-
-    int frameWidth  = sheet.getWidth() / frameCount;
-    int frameHeight = sheet.getHeight();
-
-    for (int i = 0; i < frameCount; i++) {
-        BufferedImage frameImage = new BufferedImage(frameWidth, frameHeight, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g = frameImage.createGraphics();
-        g.drawImage(sheet,
-                0, 0, frameWidth, frameHeight,
-                i * frameWidth, 0, (i + 1) * frameWidth, frameHeight,
-                null);
-        g.dispose();
-        anim.addFrame(frameImage, 100);
-    }
-
-    anim.start();
-    return anim;
-}
-
 
     public boolean isDead() {
         return dead;
@@ -174,23 +188,28 @@ public class MiniBoss implements MiniBossBehaviour {
     }
 
     public int getAttackRange() {
-    return attackRange;
-}
+        return attackRange;
+    }
 
+    public void startFight(int worldWidth) {
+        if (!fightStarted) {
+            // Pick a completely random X-position ranging across the width of the given floor bounds
+            int randomX = (int) (Math.random() * (worldWidth - 50)); 
+            
+            // The floor rests exactly at the feet (yPos + height) of the natively spawned boss
+            int floorY = yPos + height;
+            
+            healthDrop = new HealthDrop(randomX, floorY);
+        }
+        fightStarted = true;
+    }
 
-public void startFight() {
-    fightStarted = true;
-}
+    public boolean isStarted() {
+        return fightStarted;
+    }
 
-public boolean isStarted() {
-    return fightStarted;
-}
-
-public Rectangle2D.Double getTriggerZone() {
-    return new Rectangle2D.Double(xPos - startBoundary, yPos, width + (startBoundary * 2), height);
-}
-
-
-
+    public Rectangle2D.Double getTriggerZone() {
+        return new Rectangle2D.Double(xPos - startBoundary, yPos, width + (startBoundary * 2), height);
+    }
 
 }
