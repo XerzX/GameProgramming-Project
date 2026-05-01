@@ -27,6 +27,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 
 	private Player player;
 	private SolidObjectManager soManager;
+	private HUD hud;
 
 	private Background background;
 	private BackgroundManager backgroundManager;
@@ -41,6 +42,12 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 	// * 4)
 
 	private int levelOneHeight = -(worldHeight * 4);
+
+	// Level State Tracking
+	private int currLevel = 1;
+
+	// Level 2 Specific Entities
+	private Background levelTwoBackground;
 
 	public GameWindow() {
 		super("Graduation");
@@ -102,19 +109,43 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 	}
 
 	private void createEntities() {
-		background = new Background("/Assets/Background/Floor1.png", 0, 0);
+		// Initialize Common Elements
 		soManager = new SolidObjectManager(this, worldWidth, worldHeight);
 		player = new Player(this, soManager, worldWidth, worldHeight);
-		
+
 		ElevatorManager.getInstance();
 		MiniBossManager.getInstance();
+
+		hud = new HUD(player, MiniBossManager.getInstance());
+
+		// Initialize Backgrounds
+		background = new Background("/Assets/Background/Floor1.png", 0, 0);
+		levelTwoBackground = new Background("/Assets/Background/Office.png", 0, 0);
+	}
+
+	public void changeLevel(int newLevel) {
+		this.currLevel = newLevel;
+		soManager.loadLevel(newLevel);
+		player.setLevel(newLevel);
+
+		if (newLevel == 2) {
+			// Update player boundaries so physics limits behave flawlessly in Office
+			player.setWorldDimensions(2560, 1440);
+			player.setXPos(150);
+			player.setYPos(1440 - player.getHeight());
+		}
 	}
 
 	// Updates The Position Of Game Entities
 	private void gameUpdate() {
 		player.update();
 		player.updateAnimation();
-		MiniBossManager.getInstance().update(worldWidth, player);
+
+		if (currLevel == 1) {
+			MiniBossManager.getInstance().update(worldWidth, player);
+		} else if (currLevel == 2) {
+			// Update Level 2 Enemies Here
+		}
 	}
 
 	// Update Player Position
@@ -148,68 +179,94 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 
 		// Calculate Camera X Position Relative To Player (Centered On Player)
 		int camX = (player.getXPos() + (player.getWidth() / 2)) - (virtualWidth / 2);
+		int camY = 0;
 
-		// Calculate Camera Y Position Relative To Each Floor
-		int floor = (int) Math.floor((double) player.getYPos() / worldHeight);
-		int floorTopY = floor * worldHeight;
-		int offset = 145;
+		if (currLevel == 1) {
+			// Calculate Camera Y Position Relative To Each Floor
+			int floor = (int) Math.floor((double) player.getYPos() / worldHeight);
+			int floorTopY = floor * worldHeight;
+			int offset = 145;
 
-		int camY = floorTopY - offset;
+			camY = floorTopY - offset;
 
-		// Clamp Camera (Prevent Camera From Going Beyond World Dimensions)
-		if (camX < 0)
-			camX = 0;
+			// Clamp Camera (Prevent Camera From Going Beyond World Dimensions)
+			if (camX < 0)
+				camX = 0;
 
-		if (camY < levelOneHeight)
-			camY = levelOneHeight;
+			if (camY < levelOneHeight)
+				camY = levelOneHeight;
 
-		if (camX > worldWidth - virtualWidth)
-			camX = worldWidth - virtualWidth;
+			if (camX > worldWidth - virtualWidth)
+				camX = worldWidth - virtualWidth;
 
-		if (camY > 0)
-			camY = 0;
+			if (camY > 0)
+				camY = 0;
+		} 
+		else if (currLevel == 2) {
+			// Level 2 Tracking (Smoothly tracks the player's Y position rather than snapping floors)
+			camY = (player.getYPos() + (player.getHeight() / 2)) - (virtualHeight / 2);
+
+			if (camX < 0) 
+				camX = 0;
+			
+			if (camY < 0) 
+				camY = 0;
+			
+			if (camX > 2560 - virtualWidth) 
+				camX = 2560 - virtualWidth;
+			
+			if (camY > 1440 - virtualHeight) 
+				camY = 1440 - virtualHeight;
+		}
 
 		// Shift The World And Entities Drawn On For Scrolling
 		imageContext.translate(-camX, -camY);
 
 		// Z-Ordering Of Entities
 
-		// 1 - Render Background
-		background.draw(imageContext);
-		backgroundManager.drawBackgrounds(imageContext);
+		if (currLevel == 1) {
+			// 1 - Render Background
+			background.draw(imageContext);
+			backgroundManager.drawBackgrounds(imageContext);
 
-		// 2 - Render Solid Objects
-		soManager.draw(imageContext);
+			// 2 - Render Solid Objects
+			soManager.draw(imageContext);
 
-		// 3 - Render Elevators
-		ElevatorManager.getInstance().draw(imageContext);
+			// 3 - Render Elevators
+			ElevatorManager.getInstance().draw(imageContext);
 
-		// 4 - Render Projectiles
-    
-		// 4 - "Press E" prompt if near elevator
-		if (player.isNearElevator()) {
-			imageContext.setColor(java.awt.Color.WHITE);
-			imageContext.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 20));
-			imageContext.drawString("Press E to use elevator", player.getXPos() - 30, player.getYPos() - 20);
+			// 4 - Render Player & Boss
+			player.draw(imageContext);
+			MiniBossManager.getInstance().draw(imageContext);
+
+			// "Press E" prompt if near elevator
+			if (player.isNearElevator()) {
+				imageContext.setColor(java.awt.Color.WHITE);
+				imageContext.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 20));
+				imageContext.drawString("Press E to use elevator", player.getXPos() - 30, player.getYPos() - 20);
+			}
+		} else if (currLevel == 2) {
+			// Level 2 Rendering
+			levelTwoBackground.draw(imageContext);
+			soManager.draw(imageContext);
+			player.draw(imageContext);
+			// Draw whatever else is on level 2
 		}
 
-		// N - Render Player
-		player.draw(imageContext);
-
-		MiniBossManager.getInstance().draw(imageContext);
-		
 		// Reset Translation For HUD/UI Elements
 		imageContext.translate(camX, camY);
 
-		//
-		// Render UI Elements Here
-		//
-
 		imageContext.dispose();
 
+		// Scale the world to fill the physical screen
 		Graphics2D g2 = (Graphics2D) gScr;
-
 		g2.drawImage(bufferedImage, 0, 0, pWidth, pHeight, null);
+
+		// Drawing Hud Here Prevents It From Appearing Stretched Or Blurry As It Is
+		// Drawn On The Native Resolution Context
+		hud.draw(g2, pWidth, pHeight);
+
+		g2.dispose();
 	}
 
 	private void startGame() {
@@ -304,6 +361,22 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 		}
 
 		if (code == KeyEvent.VK_E) {
+			// If on the top floor (Floor 5) and we try to use the elevator to go higher,
+			// checking the transition condition
+			if (currLevel == 1 && player.getFloor() == 4 && player.isNearElevator()) {
+				// Let's check if player has collected all 4 drops
+				boolean[] drops = player.getCollectedDrops();
+				boolean hasAll = true;
+				for (boolean b : drops)
+					if (!b)
+						hasAll = false;
+
+				if (hasAll) {
+					changeLevel(2);
+					return; // Done
+				}
+			}
+
 			player.interactWithElevator();
 		}
 

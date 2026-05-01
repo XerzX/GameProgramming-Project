@@ -6,7 +6,7 @@ public class FourthBoss extends MiniBoss {
     private int attackRange = 100;
 
     public FourthBoss(int x, int y) {
-        super(x, y, 160, 240, 100, 3);
+        super(x, y, 160, 240, 100, 3, 4);
         walkAnimation = loadStripAnimation("/Assets/MiniBoss/FourthBossWalk.png", 8, true);
 
         currentAnimation = walkAnimation;
@@ -16,6 +16,9 @@ public class FourthBoss extends MiniBoss {
     public void meleeAttack() {
         if (meleeAnimation != null) currentAnimation = meleeAnimation;
     }
+
+    @Override
+    public String getName() { return "Shadow Tyrant"; }
 
     @Override
     public void projectileAttack() {

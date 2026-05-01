@@ -62,6 +62,8 @@ public class Player {
 	private int worldWidth;
 	private int worldHeight;
 
+	private int currentLevel = 1;
+
 	private boolean facingLeft = false;
 	private boolean jumping = false;
 	private boolean inAir = false;
@@ -78,6 +80,9 @@ public class Player {
 
 	// This Represents The Player's Health
 	private int HP = 100;
+
+	// Tracks which boss drops (indices 1-4) the player has collected
+	private boolean[] collectedDrops = new boolean[4]; // index 0 = boss 1, etc.
 
 	private ArrayList<PaperBall> projectiles = new ArrayList<>();
 
@@ -144,6 +149,11 @@ public class Player {
 
 		// Move Frame
 		if (!isIdle) {
+			// Show default idle while airborne instead of the walk cycle
+			if (jumping || inAir) {
+				drawImage(g2, defaultIdleSprite);
+				return;
+			}
 			drawImage(g2, walkAnimation.getCurrentFrame());
 			return;
 		}
@@ -280,7 +290,7 @@ public class Player {
 			jumping = true;
 			timeElapsed = 0;
 			startY = yPos;
-			initialVelocity = 50; // Adjust For Jump Height
+			initialVelocity = 70; // Adjust For Jump Height
 		}
 	}
 
@@ -313,8 +323,8 @@ public class Player {
 		// ALWAYS Resolve Collisions After Moving
 		resolveCollisions();
 
-		// HARD LIMIT: Prevent falling below the bottom of Floor 1
-		int absoluteBottom = 672 - height;
+		// HARD LIMIT: Prevent falling below the bottom of the current world
+		int absoluteBottom = worldHeight - height;
 		if (yPos > absoluteBottom) {
 			yPos = absoluteBottom;
 			jumping = false;
@@ -400,12 +410,48 @@ public class Player {
 		return HP;
 	}
 
+	/** Called by BossDrop when the player picks it up. bossIndex is 1-based. */
+	public void addCollectedDrop(int bossIndex) {
+		if (bossIndex >= 1 && bossIndex <= 4) {
+			collectedDrops[bossIndex - 1] = true;
+		}
+	}
+
+	/**
+	 * Returns a copy of the collected-drop flags so the HUD can read them safely.
+	 */
+	public boolean[] getCollectedDrops() {
+		return collectedDrops.clone();
+	}
+
 	public int getXPos() {
 		return xPos;
 	}
 
+	public void setXPos(int xPos) {
+		this.xPos = xPos;
+	}
+
 	public int getYPos() {
 		return yPos;
+	}
+
+	public void setYPos(int yPos) {
+		this.yPos = yPos;
+		this.startY = yPos;
+	}
+
+	public void setWorldDimensions(int width, int height) {
+		this.worldWidth = width;
+		this.worldHeight = height;
+	}
+
+	public int getLevel() {
+		return currentLevel;
+	}
+
+	public void setLevel(int level) {
+		this.currentLevel = level;
 	}
 
 	public int getWidth() {
@@ -441,5 +487,15 @@ public class Player {
 
 	public boolean isNearElevator() {
 		return elevatorManager.isNearElevator(getBoundingRectangle());
+	}
+
+	public String getName() {
+		return "Player";
+	}
+
+	// Returns The Current Floor Number. Ground Floor = 0, First Floor = 1, etc.
+	public int getFloor() {
+		int rawFloor = (int) Math.floor((double) yPos / worldHeight);
+		return Math.abs(rawFloor) + 0;
 	}
 }

@@ -8,6 +8,7 @@ public class MiniBoss implements MiniBossBehaviour {
     protected int xPos, yPos;
     protected int width, height;
     protected int hp;
+    protected int maxHP;   // set once at construction, never changes
     protected int dx;
     protected boolean facingLeft = false;
     protected boolean dead = false;
@@ -30,14 +31,19 @@ public class MiniBoss implements MiniBossBehaviour {
     protected int startBoundary = 300;
     protected boolean fightStarted = false;
 
-    public MiniBoss(int x, int y, int width, int height, int hp, int speed) {
+    // 1-based index (1 = FirstBoss … 4 = FourthBoss) used to pick the drop sprite
+    private int bossIndex;
+
+    public MiniBoss(int x, int y, int width, int height, int hp, int speed, int bossIndex) {
         xPos = x;
         yPos = y;
         this.width = width;
         this.height = height;
-        this.hp = hp;
+        this.hp    = hp;
+        this.maxHP = hp;   // snapshot full health
         dx = speed;
         this.attackRange = attackRange;
+        this.bossIndex = bossIndex;
     }
 
     @Override
@@ -89,9 +95,14 @@ public class MiniBoss implements MiniBossBehaviour {
 
     public void takeDamage(int amount) {
         hp -= amount;
-        if (hp <= 0)
-            dead = true;
-        // then drop key
+        if (hp <= 0) {
+            hp = 0;
+            if (!dead) {
+                dead = true;
+                // Spawn the boss-specific drop at the boss's feet
+                bossDrop = new BossDrop(bossIndex, xPos + width / 2, yPos + height);
+            }
+        }
 
         if (!dead && currentAnimation != null) {
             Image currentImage = currentAnimation.getImage();
@@ -104,10 +115,14 @@ public class MiniBoss implements MiniBossBehaviour {
     }
 
     private HealthDrop healthDrop = null;
+    private BossDrop   bossDrop   = null;
 
     public void update(Player player) {
         if (healthDrop != null) {
             healthDrop.update(player);
+        }
+        if (bossDrop != null) {
+            bossDrop.update(player);
         }
 
         if (dead) {
@@ -128,6 +143,9 @@ public class MiniBoss implements MiniBossBehaviour {
     public void draw(Graphics2D g2) {
         if (healthDrop != null) {
             healthDrop.draw(g2);
+        }
+        if (bossDrop != null) {
+            bossDrop.draw(g2);
         }
 
         if (dead) {
@@ -206,6 +224,16 @@ public class MiniBoss implements MiniBossBehaviour {
 
     public boolean isStarted() {
         return fightStarted;
+    }
+
+    /** Override in subclasses to return a display name for the HUD. */
+    public String getName() {
+        return "Mini Boss";
+    }
+
+    /** The HP value this boss started with (never changes). */
+    public int getMaxHP() {
+        return maxHP;
     }
 
     public Rectangle2D.Double getTriggerZone() {

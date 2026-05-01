@@ -6,7 +6,7 @@ public class ThirdBoss extends MiniBoss {
     private int attackRange = 100;
 
     public ThirdBoss(int x, int y) {
-        super(x, y, 160, 240, 100, 3);
+        super(x, y, 160, 240, 100, 3, 3);
         walkAnimation = loadStripAnimation("/Assets/MiniBoss/ThirdBossWalk.png", 8, true);
 
         currentAnimation = walkAnimation;
@@ -16,6 +16,9 @@ public class ThirdBoss extends MiniBoss {
     public void meleeAttack() {
         if (meleeAnimation != null) currentAnimation = meleeAnimation;
     }
+
+    @Override
+    public String getName() { return "Iron Crusher"; }
 
     @Override
     public void projectileAttack() {

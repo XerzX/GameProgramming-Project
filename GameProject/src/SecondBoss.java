@@ -6,7 +6,7 @@ public class SecondBoss extends MiniBoss {
     private int attackRange = 100;
 
     public SecondBoss(int x, int y) {
-        super(x, y, 160, 240, 100, 2);
+        super(x, y, 160, 240, 100, 2, 2);
         walkAnimation = loadStripAnimation("/Assets/MiniBoss/SecondBossWalk.png", 8, true);
         currentAnimation = walkAnimation;
     }
@@ -15,6 +15,9 @@ public class SecondBoss extends MiniBoss {
     public void meleeAttack() {
         if (meleeAnimation != null) currentAnimation = meleeAnimation;
     }
+
+    @Override
+    public String getName() { return "Phantom Archer"; }
 
     @Override
     public void projectileAttack() {
