@@ -7,15 +7,21 @@ public class FirstBoss extends MiniBoss {
     public FirstBoss(int x, int y) {
         super(x, y, 160, 240, 100, 2);
         walkAnimation = loadStripAnimation("/Assets/MiniBoss/FirstBossWalk.png", 8, true);
-         specialCooldownMax = 480;
-        currentAnimation = walkAnimation;
+       
+        currentAnimation = walkAnimation; 
+        specialCooldownMax = 480;
 
     }
 
     @Override
     public void meleeAttack() {
         if (meleeAnimation != null) currentAnimation = meleeAnimation;
+
+        
     }
+
+    // @Override
+    public String getName() { return "The Warden"; }
 
     @Override
     public void projectileAttack() {

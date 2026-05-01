@@ -33,6 +33,8 @@ public class MiniBoss implements MiniBossBehaviour {
     protected int specialCooldown    = 0;
     protected int specialCooldownMax = 300;
 
+     private int bossIndex;
+
     public MiniBoss(int x, int y, int width, int height, int hp, int speed) {
         xPos = x;
         yPos = y;
@@ -41,6 +43,7 @@ public class MiniBoss implements MiniBossBehaviour {
         this.hp = hp;
         dx = speed;
         this.attackRange = attackRange;
+         this.bossIndex = bossIndex;
     }
 
     @Override
@@ -93,7 +96,7 @@ public class MiniBoss implements MiniBossBehaviour {
         hp -= amount;
         if (hp <= 0)
             dead = true;
-        // then drop key
+        bossDrop = new BossDrop(bossIndex, xPos + width / 2, yPos + height);
 
         if (!dead && currentAnimation != null) {
             Image currentImage = currentAnimation.getImage();
@@ -106,6 +109,7 @@ public class MiniBoss implements MiniBossBehaviour {
     }
 
     private HealthDrop healthDrop = null;
+     private BossDrop   bossDrop   = null;
 
     public void update(Player player) {
         if (healthDrop != null) {

@@ -83,6 +83,9 @@ private static final int FREEZE_DURATION = 120; // 2 seconds at 60fps
 	private boolean isIdle = true;
 	private boolean isAttacking = false;
 
+	private int currentLevel = 1;
+private boolean[] collectedDrops = new boolean[4];
+
 	// This Represents The Player's Health
 	private int HP = 100;
 
@@ -290,7 +293,7 @@ private static final int FREEZE_DURATION = 120; // 2 seconds at 60fps
 			jumping = true;
 			timeElapsed = 0;
 			startY = yPos;
-			initialVelocity = 50; // Adjust For Jump Height
+			initialVelocity = 70; // Adjust For Jump Height
 		}
 	}
 
@@ -328,7 +331,7 @@ private static final int FREEZE_DURATION = 120; // 2 seconds at 60fps
 		resolveCollisions();
 
 		// HARD LIMIT: Prevent falling below the bottom of Floor 1
-		int absoluteBottom = 672 - height;
+		int absoluteBottom = worldHeight - height;
 		if (yPos > absoluteBottom) {
 			yPos = absoluteBottom;
 			jumping = false;
@@ -427,14 +430,49 @@ private static final int FREEZE_DURATION = 120; // 2 seconds at 60fps
 	public int getHP() {
 		return HP;
 	}
+public void addCollectedDrop(int bossIndex) {
+		if (bossIndex >= 1 && bossIndex <= 4) {
+			collectedDrops[bossIndex - 1] = true;
+		}
+	}
+
+	/**
+	 * Returns a copy of the collected-drop flags so the HUD can read them safely.
+	 */
+	public boolean[] getCollectedDrops() {
+		return collectedDrops.clone();
+	}
 
 	public int getXPos() {
 		return xPos;
 	}
 
+	public void setXPos(int xPos) {
+		this.xPos = xPos;
+	}
+
 	public int getYPos() {
 		return yPos;
 	}
+
+	public void setYPos(int yPos) {
+		this.yPos = yPos;
+		this.startY = yPos;
+	}
+
+	public void setWorldDimensions(int width, int height) {
+		this.worldWidth = width;
+		this.worldHeight = height;
+	}
+
+	public int getLevel() {
+		return currentLevel;
+	}
+
+	public void setLevel(int level) {
+		this.currentLevel = level;
+	}
+
 
 	public int getWidth() {
 		return width;
@@ -480,6 +518,16 @@ private static final int FREEZE_DURATION = 120; // 2 seconds at 60fps
 public void freeze() {
     freezeTimer = FREEZE_DURATION;
 }
+
+public String getName() {
+		return "Player";
+	}
+
+	// Returns The Current Floor Number. Ground Floor = 0, First Floor = 1, etc.
+	public int getFloor() {
+		int rawFloor = (int) Math.floor((double) yPos / worldHeight);
+		return Math.abs(rawFloor) + 0;
+	}
 
 
 

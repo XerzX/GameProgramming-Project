@@ -15,7 +15,13 @@ public class SecondBoss extends MiniBoss {
     @Override
     public void meleeAttack() {
         if (meleeAnimation != null) currentAnimation = meleeAnimation;
+
+        
     }
+
+
+    public String getName() { return "Phantom Archer"; }
+
 
     @Override
     public void projectileAttack() {
@@ -40,6 +46,6 @@ public class SecondBoss extends MiniBoss {
         System.out.println("[SecondBoss] Player frozen!");
     }
 
-    
+
 
 }

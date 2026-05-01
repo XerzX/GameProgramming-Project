@@ -29,6 +29,10 @@ public class ThirdBoss extends MiniBoss {
         }
     }
 
+    public String getName() { return "Iron Crusher"; }
+
+    
+
     @Override
     public void specialAttack(Player player) {
         if (specialCooldown > 0) return;
