@@ -61,6 +61,7 @@ public class FinalBoss {
 
     private int attackCooldownTimer = 0;
     private int attackDurationTimer = 0;
+    private boolean hasHitThisAttack = false;
     private java.util.ArrayList<Shockwave> shockwaves = new java.util.ArrayList<>();
 
     public void meleeAttack() {
@@ -68,6 +69,7 @@ public class FinalBoss {
             currentAnimation = meleeAnimation;
         attackDurationTimer = 30; // Time locked in the melee pose
         attackCooldownTimer = 100; // Time before next attack
+        hasHitThisAttack = false;
     }
 
     public void projectileAttack() {
@@ -179,8 +181,9 @@ public class FinalBoss {
                     meleeHitBox = new Rectangle2D.Double(xPos, yPos, 80 + width, height);
                 }
 
-                if (meleeHitBox.intersects(player.getBoundingRectangle())) {
+                if (!hasHitThisAttack && meleeHitBox.intersects(player.getBoundingRectangle())) {
                     player.applyDamage(10);
+                    hasHitThisAttack = true;
                 }
             }
         }
