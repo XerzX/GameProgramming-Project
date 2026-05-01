@@ -7,6 +7,7 @@ public class SecondBoss extends MiniBoss {
 
     public SecondBoss(int x, int y) {
         super(x, y, 160, 240, 100, 2);
+        specialCooldownMax = 600;
         walkAnimation = loadStripAnimation("/Assets/MiniBoss/SecondBossWalk.png", 8, true);
         currentAnimation = walkAnimation;
     }
@@ -27,5 +28,18 @@ public class SecondBoss extends MiniBoss {
         }
 
     }
+
+    @Override
+    public void specialAttack(Player player) {
+        if (specialCooldown > 0) return;
+ 
+        player.freeze();
+ 
+        specialCooldown = specialCooldownMax;
+ 
+        System.out.println("[SecondBoss] Player frozen!");
+    }
+
+    
 
 }

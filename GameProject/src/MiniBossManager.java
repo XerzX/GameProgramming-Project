@@ -10,6 +10,11 @@ public class MiniBossManager {
     private int attackTimer = 0;
     private int attackCooldown = 120;
 
+    private int[] specialTimers    = new int[4];
+    private int[] specialIntervals = { 480, 600, 300, 180 };
+
+
+
     public static MiniBossManager getInstance() {
         if (instance == null)
             instance = new MiniBossManager();
@@ -25,10 +30,11 @@ public class MiniBossManager {
         bosses.add(new FourthBoss(300, -1594));
     }
 
-    public void update(int worldWidth, Player player) {
+   public void update(int worldWidth, Player player) {
+    Rectangle2D.Double playerRect = player.getBoundingRectangle();
         attackTimer++;
 
-        Rectangle2D.Double playerRect = player.getBoundingRectangle();
+        // Rectangle2D.Double playerRect = player.getBoundingRectangle();
         int playerX = (int) playerRect.x;
         int playerY = (int) playerRect.y;
 
@@ -50,6 +56,19 @@ public class MiniBossManager {
                     decideAttack(boss, dist);
                     attackTimer = 0;
                 }
+
+                if (boss.isStarted()) {
+                specialTimers[i]++;
+                if (specialTimers[i] >= specialIntervals[i]) {
+                    boss.specialAttack(player);
+                    specialTimers[i] = 0;
+                }
+            }
+
+
+
+
+
 
             }
             boss.update(player);

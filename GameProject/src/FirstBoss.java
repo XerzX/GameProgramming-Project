@@ -3,9 +3,11 @@ public class FirstBoss extends MiniBoss {
 
     private int dir;
 
+
     public FirstBoss(int x, int y) {
         super(x, y, 160, 240, 100, 2);
         walkAnimation = loadStripAnimation("/Assets/MiniBoss/FirstBossWalk.png", 8, true);
+         specialCooldownMax = 480;
         currentAnimation = walkAnimation;
 
     }
@@ -27,14 +29,24 @@ public class FirstBoss extends MiniBoss {
 
     }
 
-    // @Override
-    // public void specialAttack() {
-    //     currentFrames = specialFrames;
-    //     currentFrame  = 0;
-    //     // BossA special: fires 3 projectiles spread vertically
-    //     int dir = facingLeft ? 1 : 2;
-    //     ProjectileManager.getInstance().spawn(xPos, yPos - 60, width, height, dir);
-    //     ProjectileManager.getInstance().spawn(xPos, yPos,      width, height, dir);
-    //     ProjectileManager.getInstance().spawn(xPos, yPos + 60, width, height, dir);
-    // }
+   @Override
+    public void specialAttack(Player player) {
+        if (specialCooldown > 0){
+            return;
+        }
+ 
+        int oldBossX   = xPos;
+        int oldBossY   = yPos;
+ 
+        xPos = player.getXPos();
+        yPos = player.getYPos();
+ 
+        player.setPosition(oldBossX, yPos);
+ 
+        specialCooldown = specialCooldownMax;
+ 
+        System.out.println("[FirstBoss] Position swap!");
+    }
+ 
+
 }

@@ -171,6 +171,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 
 		// Shift The World And Entities Drawn On For Scrolling
 		imageContext.translate(-camX, -camY);
+		
 
 		// Z-Ordering Of Entities
 

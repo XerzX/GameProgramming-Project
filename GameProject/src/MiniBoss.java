@@ -30,6 +30,9 @@ public class MiniBoss implements MiniBossBehaviour {
     protected int startBoundary = 300;
     protected boolean fightStarted = false;
 
+    protected int specialCooldown    = 0;
+    protected int specialCooldownMax = 300;
+
     public MiniBoss(int x, int y, int width, int height, int hp, int speed) {
         xPos = x;
         yPos = y;
@@ -48,9 +51,8 @@ public class MiniBoss implements MiniBossBehaviour {
     public void projectileAttack() {
     }
 
-    @Override
-    public void specialAttack() {
-    }
+   @Override
+    public void specialAttack(Player player) {}
 
     public void chasePlayer(int playerX, int playerY) {
 
@@ -113,6 +115,10 @@ public class MiniBoss implements MiniBossBehaviour {
         if (dead) {
             return;
         }
+        if (specialCooldown > 0){
+            specialCooldown--;
+
+        } 
 
         if (currentAnimation != null)
             currentAnimation.update();
@@ -123,6 +129,9 @@ public class MiniBoss implements MiniBossBehaviour {
                 tintedSprite = null;
             }
         }
+
+
+
     }
 
     public void draw(Graphics2D g2) {

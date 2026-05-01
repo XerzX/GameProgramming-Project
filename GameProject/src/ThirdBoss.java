@@ -7,6 +7,7 @@ public class ThirdBoss extends MiniBoss {
 
     public ThirdBoss(int x, int y) {
         super(x, y, 160, 240, 100, 3);
+         specialCooldownMax = 300;
         walkAnimation = loadStripAnimation("/Assets/MiniBoss/ThirdBossWalk.png", 8, true);
 
         currentAnimation = walkAnimation;
@@ -27,5 +28,24 @@ public class ThirdBoss extends MiniBoss {
             dir = 2;
         }
     }
+
+    @Override
+    public void specialAttack(Player player) {
+        if (specialCooldown > 0) return;
+ 
+        player.applyDamage(20);
+ 
+     
+        currentAnimation = meleeAnimation;
+        if (currentAnimation != null){
+            currentAnimation.start();
+        }
+ 
+        specialCooldown = specialCooldownMax;
+ 
+        System.out.println("[ThirdBoss] Heavy melee! dmg" );
+    }
+
+
 
 }
