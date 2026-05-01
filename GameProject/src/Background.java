@@ -1,7 +1,5 @@
 import java.awt.Graphics2D;
-import java.awt.Dimension;
 import java.awt.Image;
-import javax.swing.JFrame;
 
 public class Background {
 	
