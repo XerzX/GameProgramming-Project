@@ -3,10 +3,10 @@ import java.awt.image.BufferedImage;
 import java.awt.Graphics2D;
 
 /**
-    The StripAnimation class creates an animation from a strip file.
-*/
+ * The StripAnimation class creates an animation from a strip file.
+ */
 public class StripAnimation {
-	
+
 	Animation animation;
 
 	private int x;
@@ -22,7 +22,7 @@ public class StripAnimation {
 		// Load Image From Strip File
 		Image stripImage = ImageManager.getInstance().loadImage(filePath).getImage();
 
-		imageWidth  = stripImage.getWidth(null) / outerBound; // use the actual frame count
+		imageWidth = stripImage.getWidth(null) / outerBound; // use the actual frame count
 		imageHeight = stripImage.getHeight(null);
 
 		for (int i = 0; i < outerBound; i++) {
@@ -47,7 +47,7 @@ public class StripAnimation {
 	public void stop() {
 		animation.stop();
 	}
-	
+
 	public void update() {
 		if (!animation.isStillActive())
 			return;
@@ -61,6 +61,14 @@ public class StripAnimation {
 
 	public Image getCurrentFrame() {
 		return animation.getImage();
+	}
+
+	public int getImageWidth() {
+		return imageWidth;
+	}
+
+	public int getImageHeight() {
+		return imageHeight;
 	}
 
 	public void draw(Graphics2D g2) {

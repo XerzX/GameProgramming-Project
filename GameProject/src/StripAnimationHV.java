@@ -3,10 +3,10 @@ import java.awt.image.BufferedImage;
 import java.awt.Graphics2D;
 
 /**
-    The StripAnimation class creates an animation from a strip file.
-*/
+ * The StripAnimation class creates an animation from a strip file.
+ */
 public class StripAnimationHV {
-	
+
 	Animation animation;
 
 	private int x;
@@ -23,11 +23,11 @@ public class StripAnimationHV {
 		Image stripImage = ImageManager.getInstance().loadImage(filePath).getImage();
 
 		// Derive frame dimensions from the actual grid layout passed in
-		imageWidth  = stripImage.getWidth(null)  / innerBound; // columns
+		imageWidth = stripImage.getWidth(null) / innerBound; // columns
 		imageHeight = stripImage.getHeight(null) / outerBound; // rows
 
-		for (int i = 0; i < outerBound; i++) {       // row
-			for (int j = 0; j < innerBound; j++) {   // column
+		for (int i = 0; i < outerBound; i++) { // row
+			for (int j = 0; j < innerBound; j++) { // column
 
 				BufferedImage frameImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
 				Graphics2D g = (Graphics2D) frameImage.getGraphics();
@@ -51,7 +51,7 @@ public class StripAnimationHV {
 	public void stop() {
 		animation.stop();
 	}
-	
+
 	public void update() {
 		if (!animation.isStillActive())
 			return;
@@ -65,6 +65,14 @@ public class StripAnimationHV {
 
 	public Image getCurrentFrame() {
 		return animation.getImage();
+	}
+
+	public int getImageWidth() {
+		return imageWidth;
+	}
+
+	public int getImageHeight() {
+		return imageHeight;
 	}
 
 	public void draw(Graphics2D g2) {
