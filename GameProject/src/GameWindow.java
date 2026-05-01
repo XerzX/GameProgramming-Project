@@ -318,9 +318,23 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 
 			// "Press E" prompt if near elevator
 			if (player.isNearElevator()) {
-				imageContext.setColor(java.awt.Color.WHITE);
+				int floor = player.getFloor();
+				boolean canUse = true;
+				if (floor >= 0 && floor <= 3) {
+					if (!player.getCollectedDrops()[floor]) canUse = false;
+				} else if (floor == 4) {
+					boolean[] drops = player.getCollectedDrops();
+					for (boolean b : drops) if (!b) canUse = false;
+				}
+
 				imageContext.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 20));
-				imageContext.drawString("Press E to use elevator", player.getXPos() - 30, player.getYPos() - 20);
+				if (canUse) {
+					imageContext.setColor(java.awt.Color.WHITE);
+					imageContext.drawString("Press E to use elevator", player.getXPos() - 30, player.getYPos() - 20);
+				} else {
+					imageContext.setColor(java.awt.Color.RED);
+					imageContext.drawString("Defeat the boss to use elevator", player.getXPos() - 60, player.getYPos() - 20);
+				}
 			}
 		} else if (currLevel == 2) {
 			// Level 2 Rendering
@@ -480,19 +494,25 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 		}
 
 		if (code == KeyEvent.VK_E) {
-			// If on the top floor (Floor 5) and we try to use the elevator to go higher,
-			// checking the transition condition
-			if (currLevel == 1 && player.getFloor() == 4 && player.isNearElevator()) {
-				// Let's check if player has collected all 4 drops
-				boolean[] drops = player.getCollectedDrops();
-				boolean hasAll = true;
-				for (boolean b : drops)
-					if (!b)
-						hasAll = false;
+			if (currLevel == 1 && player.isNearElevator()) {
+				int currentFloor = player.getFloor();
+				if (currentFloor >= 0 && currentFloor <= 3) {
+					if (!player.getCollectedDrops()[currentFloor]) {
+						return; // Block elevator use until boss is defeated
+					}
+				} else if (currentFloor == 4) {
+					boolean[] drops = player.getCollectedDrops();
+					boolean hasAll = true;
+					for (boolean b : drops)
+						if (!b)
+							hasAll = false;
 
-				if (hasAll) {
-					changeLevel(2);
-					return; // Done
+					if (hasAll) {
+						changeLevel(2);
+						return; // Done
+					} else {
+						return; // Block going anywhere if somehow on floor 4 without all drops
+					}
 				}
 			}
 
