@@ -46,6 +46,13 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 	// Level State Tracking
 	private int currLevel = 1;
 
+	// Encounter States
+	private boolean isGameOver = false;
+	private boolean isVictory = false;
+	private boolean isStartScreen = true;
+
+	private Image startScreenImage;
+
 	// Level 2 Specific Entities
 	private Background levelTwoBackground;
 	private FinalBoss finalBoss;
@@ -122,6 +129,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 		// Initialize Backgrounds
 		background = new Background("/Assets/Background/Floor1.png", 0, 0);
 		levelTwoBackground = new Background("/Assets/Background/Office.png", 0, 0);
+		startScreenImage = ImageManager.getInstance().loadImage("/Assets/Background/StartScreen.png").getImage();
 	}
 
 	public void changeLevel(int newLevel) {
@@ -146,6 +154,20 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 
 	// Updates The Position Of Game Entities
 	private void gameUpdate() {
+		if (isStartScreen || isGameOver || isVictory) {
+			return; // Freeze the game loop
+		}
+
+		if (player.getHP() <= 0) {
+			isGameOver = true;
+			return;
+		}
+
+		if (currLevel == 2 && finalBoss != null && finalBoss.isDead()) {
+			isVictory = true;
+			return;
+		}
+
 		player.update();
 		player.updateAnimation();
 
@@ -187,6 +209,49 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 
 	// Renders Updated Entities To The Screen
 	public void gameRender(Graphics gScr) {
+		if (isStartScreen) {
+			Graphics2D g2 = (Graphics2D) gScr;
+			if (startScreenImage != null) {
+				g2.drawImage(startScreenImage, 0, 0, pWidth, pHeight, null);
+			}
+			
+			// Draw Title
+			g2.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 120));
+			String title = "GRADUATION";
+			int titleW = g2.getFontMetrics().stringWidth(title);
+			
+			int tX = (pWidth - titleW) / 2;
+			int tY = (pHeight / 2) - 50; // Dropped closer to center
+
+			// Thick black outline for readability
+			g2.setColor(java.awt.Color.BLACK);
+			g2.drawString(title, tX - 4, tY - 4);
+			g2.drawString(title, tX + 4, tY - 4);
+			g2.drawString(title, tX - 4, tY + 4);
+			g2.drawString(title, tX + 4, tY + 4);
+			g2.drawString(title, tX - 4, tY);
+			g2.drawString(title, tX + 4, tY);
+			g2.drawString(title, tX, tY - 4);
+			g2.drawString(title, tX, tY + 4);
+			
+			// Main title text (Gold)
+			g2.setColor(new java.awt.Color(255, 215, 0));
+			g2.drawString(title, tX, tY);
+
+			// Draw Prompt
+			g2.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 40));
+			String msg = "PRESS SPACE TO START";
+			int msgW = g2.getFontMetrics().stringWidth(msg);
+			
+			g2.setColor(new java.awt.Color(0, 0, 0, 150));
+			g2.fillRect((pWidth - msgW) / 2 - 20, pHeight - 140, msgW + 40, 60);
+
+			g2.setColor(java.awt.Color.WHITE);
+			g2.drawString(msg, (pWidth - msgW) / 2, pHeight - 100);
+			g2.dispose();
+			return;
+		}
+
 		Graphics2D imageContext = (Graphics2D) bufferedImage.getGraphics();
 
 		// Calculate Camera X Position Relative To Player (Centered On Player)
@@ -253,9 +318,23 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 
 			// "Press E" prompt if near elevator
 			if (player.isNearElevator()) {
-				imageContext.setColor(java.awt.Color.WHITE);
+				int floor = player.getFloor();
+				boolean canUse = true;
+				if (floor >= 0 && floor <= 3) {
+					if (!player.getCollectedDrops()[floor]) canUse = false;
+				} else if (floor == 4) {
+					boolean[] drops = player.getCollectedDrops();
+					for (boolean b : drops) if (!b) canUse = false;
+				}
+
 				imageContext.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 20));
-				imageContext.drawString("Press E to use elevator", player.getXPos() - 30, player.getYPos() - 20);
+				if (canUse) {
+					imageContext.setColor(java.awt.Color.WHITE);
+					imageContext.drawString("Press E to use elevator", player.getXPos() - 30, player.getYPos() - 20);
+				} else {
+					imageContext.setColor(java.awt.Color.RED);
+					imageContext.drawString("Defeat the boss to use elevator", player.getXPos() - 60, player.getYPos() - 20);
+				}
 			}
 		} else if (currLevel == 2) {
 			// Level 2 Rendering
@@ -281,6 +360,37 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 		// Drawing Hud Here Prevents It From Appearing Stretched Or Blurry As It Is
 		// Drawn On The Native Resolution Context
 		hud.draw(g2, pWidth, pHeight);
+
+		// Draw Encounter Outcomes
+		if (isGameOver) {
+			g2.setColor(new java.awt.Color(10, 0, 0, 180));
+			g2.fillRect(0, 0, pWidth, pHeight);
+			g2.setColor(new java.awt.Color(200, 30, 30));
+			g2.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 100));
+			String msg = "GAME OVER";
+			int msgW = g2.getFontMetrics().stringWidth(msg);
+			g2.drawString(msg, (pWidth - msgW) / 2, pHeight / 2);
+			
+			g2.setColor(java.awt.Color.WHITE);
+			g2.setFont(new java.awt.Font("Arial", java.awt.Font.PLAIN, 30));
+			String subMsg = "You failed the assignment.";
+			int subW = g2.getFontMetrics().stringWidth(subMsg);
+			g2.drawString(subMsg, (pWidth - subW) / 2, (pHeight / 2) + 60);
+		} else if (isVictory) {
+			g2.setColor(new java.awt.Color(255, 255, 255, 180));
+			g2.fillRect(0, 0, pWidth, pHeight);
+			g2.setColor(new java.awt.Color(50, 180, 50));
+			g2.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 100));
+			String msg = "GRADUATED!";
+			int msgW = g2.getFontMetrics().stringWidth(msg);
+			g2.drawString(msg, (pWidth - msgW) / 2, (pHeight / 2) - 20);
+			
+			g2.setColor(java.awt.Color.BLACK);
+			g2.setFont(new java.awt.Font("Arial", java.awt.Font.ITALIC, 40));
+			String subMsg = "The Dean was defeated.";
+			int subW = g2.getFontMetrics().stringWidth(subMsg);
+			g2.drawString(subMsg, (pWidth - subW) / 2, (pHeight / 2) + 60);
+		}
 
 		g2.dispose();
 	}
@@ -366,6 +476,13 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 			stopGame();
 		}
 
+		if (isStartScreen) {
+			if (code == KeyEvent.VK_SPACE) {
+				isStartScreen = false;
+			}
+			return;
+		}
+
 		if (code == KeyEvent.VK_LEFT) {
 			updatePlayer(1);
 		}
@@ -377,19 +494,25 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 		}
 
 		if (code == KeyEvent.VK_E) {
-			// If on the top floor (Floor 5) and we try to use the elevator to go higher,
-			// checking the transition condition
-			if (currLevel == 1 && player.getFloor() == 4 && player.isNearElevator()) {
-				// Let's check if player has collected all 4 drops
-				boolean[] drops = player.getCollectedDrops();
-				boolean hasAll = true;
-				for (boolean b : drops)
-					if (!b)
-						hasAll = false;
+			if (currLevel == 1 && player.isNearElevator()) {
+				int currentFloor = player.getFloor();
+				if (currentFloor >= 0 && currentFloor <= 3) {
+					if (!player.getCollectedDrops()[currentFloor]) {
+						return; // Block elevator use until boss is defeated
+					}
+				} else if (currentFloor == 4) {
+					boolean[] drops = player.getCollectedDrops();
+					boolean hasAll = true;
+					for (boolean b : drops)
+						if (!b)
+							hasAll = false;
 
-				if (hasAll) {
-					changeLevel(2);
-					return; // Done
+					if (hasAll) {
+						changeLevel(2);
+						return; // Done
+					} else {
+						return; // Block going anywhere if somehow on floor 4 without all drops
+					}
 				}
 			}
 
