@@ -2,6 +2,8 @@ import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
 
 public class Player {
 
@@ -36,6 +38,16 @@ public class Player {
 	private int attackTimer = 0;
 	private static final int ATTACK_DISPLAY_TICKS = 30;
 
+	// Counts down game ticks for how long the damage tint is shown
+	private int damageTimer = 0;
+	private static final int DAMAGE_TINT_TICKS = 20;
+
+	// Pre-computed red-tinted copy of the sprite active when damage was taken
+	private BufferedImage tintedSprite = null;
+
+	// Current Sprite Displayed On Screen
+	private Image currSprite;
+
 	// Player's World Coordinates
 	private int xPos;
 	private int yPos;
@@ -62,6 +74,9 @@ public class Player {
 
 	private boolean isIdle = true;
 	private boolean isAttacking = false;
+
+	// This Represents The Player's Health
+	private int HP = 100;
 
 	public Player(JFrame gameWindow, SolidObjectManager soManager, int worldWidth, int worldHeight) {
 
@@ -106,7 +121,7 @@ public class Player {
 			return;
 		}
 
-		// Attack Frame — shown while the attack timer is counting down
+		// Attack Frame
 		if (isAttacking) {
 			if (state == PlayerState.MELEE) {
 				drawImage(g2, meleeAttackSprite.getImage());
@@ -125,13 +140,18 @@ public class Player {
 	}
 
 	// Handling Drawing Player Sprite and Mirror It To Face Opposite Direction
-	private void drawImage(Graphics2D g2, java.awt.Image img) {
+	private void drawImage(Graphics2D g2, Image img) {
+		currSprite = img;
+
+		// Substitute the tinted copy while the damage flash is active
+		Image drawImg = (damageTimer > 0 && tintedSprite != null) ? tintedSprite : img;
+
 		if (facingLeft) {
 			// Mirror horizontally: draw from right edge leftward with negative width
-			g2.drawImage(img, xPos + width, yPos, -width, height, null);
+			g2.drawImage(drawImg, xPos + width, yPos, -width, height, null);
 		} else {
 			// Normal draw: sprite naturally faces right
-			g2.drawImage(img, xPos, yPos, width, height, null);
+			g2.drawImage(drawImg, xPos, yPos, width, height, null);
 		}
 	}
 
@@ -168,6 +188,19 @@ public class Player {
 			return;
 		state = PlayerState.MELEE;
 		isAttacking = true;
+
+		Rectangle2D.Double meleeHitBox = null;
+
+		int attackRange = 100;
+		int attackHeight = 100;
+
+		if (facingLeft)
+			meleeHitBox = new Rectangle2D.Double(xPos + width, yPos + 100, attackRange, attackHeight);
+		else
+			meleeHitBox = new Rectangle2D.Double(xPos - attackRange, yPos + 100, attackRange, attackHeight);
+
+		// Add Check For AttackHitBox Collision w/ Player Here
+
 		attackTimer = ATTACK_DISPLAY_TICKS; // start countdown
 	}
 
@@ -176,6 +209,9 @@ public class Player {
 			return;
 		state = PlayerState.RANGED;
 		isAttacking = true;
+
+		// Call Projectile Start() Function Here
+
 		attackTimer = ATTACK_DISPLAY_TICKS; // start countdown
 	}
 
@@ -201,6 +237,15 @@ public class Player {
 			if (attackTimer <= 0) {
 				isAttacking = false;
 				attackTimer = 0;
+			}
+		}
+
+		// Count down the damage tint timer each game tick.
+		// When it reaches 0 the tinted sprite is discarded.
+		if (damageTimer > 0) {
+			damageTimer--;
+			if (damageTimer <= 0) {
+				tintedSprite = null;
 			}
 		}
 	}
@@ -296,6 +341,28 @@ public class Player {
 				xPos = (int) (objectRect.x + objectRect.width);
 			}
 		}
+	}
+
+	public void applyDamage(int damage) {
+		HP -= damage;
+		if (HP <= 0) {
+			HP = 0;
+		}
+
+		// Generate Tinted Copy of Currently Displaying Sprite
+		BufferedImage playerSprite = ImageManager.getInstance().toBufferedImage(currSprite);
+		tintedSprite = RedTintFX.getInstance().apply(playerSprite);
+		damageTimer = DAMAGE_TINT_TICKS; // start the flash countdown
+	}
+
+	public void heal(int amount) {
+		HP += amount;
+		if (HP > 100)
+			HP = 100;
+	}
+
+	public int getHP() {
+		return HP;
 	}
 
 	public int getXPos() {
