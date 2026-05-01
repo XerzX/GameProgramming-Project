@@ -6,8 +6,8 @@ public class ThirdBoss extends MiniBoss {
     private int attackRange = 100;
 
     public ThirdBoss(int x, int y) {
-        super(x, y, 80, 120, 100, 3);
-        walkAnimation = loadStripAnimation("/Assets/MiniBoss/SecondBossWalk.png", 8, true);
+        super(x, y, 160, 240, 100, 3);
+        walkAnimation = loadStripAnimation("/Assets/MiniBoss/ThirdBossWalk.png", 8, true);
 
         currentAnimation = walkAnimation;
     }

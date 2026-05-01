@@ -6,7 +6,7 @@ public class FourthBoss extends MiniBoss {
     private int attackRange = 100;
 
     public FourthBoss(int x, int y) {
-        super(x, y, 80, 120, 100, 3);
+        super(x, y, 160, 240, 100, 3);
         walkAnimation = loadStripAnimation("/Assets/MiniBoss/FourthBossWalk.png", 8, true);
 
         currentAnimation = walkAnimation;

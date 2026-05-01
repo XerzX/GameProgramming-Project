@@ -19,10 +19,10 @@ public class MiniBossManager {
     private MiniBossManager() {
         bosses = new ArrayList<>();
 
-        bosses.add(new FirstBoss(800, 672 - 150));
-        bosses.add(new SecondBoss(200, 672 - 150 - 672));
-        bosses.add(new ThirdBoss(100, 672 - 150 - 1344));
-        bosses.add(new FourthBoss(300, 672 - 150 - 2016));
+        bosses.add(new FirstBoss(800, 422));
+        bosses.add(new SecondBoss(200, -250));
+        bosses.add(new ThirdBoss(100, -922));
+        bosses.add(new FourthBoss(300, -1594));
     }
 
    public void update(int worldWidth, Rectangle2D.Double playerRect) {
