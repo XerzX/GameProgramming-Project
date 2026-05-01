@@ -1,9 +1,9 @@
 import java.awt.Graphics2D;
-import java.awt.geom.Rectangle2D;
-import javax.swing.JFrame;
 import java.awt.Image;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import javax.swing.JFrame;
 
 public class Player {
 
@@ -77,6 +77,9 @@ public class Player {
 
 	private boolean isIdle = true;
 	private boolean isAttacking = false;
+
+	private int freezeTimer = 0;
+private static final int FREEZE_DURATION = 120;
 
 	// This Represents The Player's Health
 	private int HP = 100;
@@ -183,6 +186,8 @@ public class Player {
 	}
 
 	public void move(int direction) {
+		 if (freezeTimer > 0){
+			return;}
 		// Restart the walk animation if it stopped (key was released previously)
 		if (!walkAnimation.isAnimationActive()) {
 			walkAnimation.start();
@@ -311,6 +316,10 @@ public class Player {
 	}
 
 	public void update() {
+		 if (freezeTimer > 0) {
+        freezeTimer--;
+        return; }
+
 		if (spawnProjectile) {
 			int projX = facingLeft ? xPos - 50 : xPos + width;
 			PaperBall paperBall = new PaperBall(projX, yPos + 50, worldWidth, facingLeft);
@@ -392,6 +401,14 @@ public class Player {
 				xPos = (int) (objectRect.x + objectRect.width);
 			}
 		}
+		for (MiniBoss boss : MiniBossManager.getInstance().getBosses()) {
+    if (boss instanceof FourthBoss fb) {
+        int[] pos = { xPos, yPos };
+        fb.resolveWallCollision(pos, width, height);
+        xPos = pos[0];
+        yPos = pos[1];
+    }
+}
 	}
 
 	public void applyDamage(int damage) {
@@ -504,4 +521,27 @@ public class Player {
 		int rawFloor = (int) Math.floor((double) yPos / worldHeight);
 		return Math.abs(rawFloor) + 0;
 	}
+
+	public void setPosition(int x, int y) {
+    xPos = x;
+    yPos = y;
+}
+
+
+public void freeze() {
+    freezeTimer = FREEZE_DURATION;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 }

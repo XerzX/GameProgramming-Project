@@ -7,6 +7,7 @@ public class ThirdBoss extends MiniBoss {
 
     public ThirdBoss(int x, int y) {
         super(x, y, 160, 240, 100, 3, 3);
+        specialCooldownMax = 300;
         walkAnimation = loadStripAnimation("/Assets/MiniBoss/ThirdBossWalk.png", 8, true);
 
         currentAnimation = walkAnimation;
@@ -18,9 +19,6 @@ public class ThirdBoss extends MiniBoss {
     }
 
     @Override
-    public String getName() { return "Iron Crusher"; }
-
-    @Override
     public void projectileAttack() {
         if (projectileAnimation != null) currentAnimation = projectileAnimation;
 
@@ -29,6 +27,24 @@ public class ThirdBoss extends MiniBoss {
         } else {
             dir = 2;
         }
+    }
+
+
+     @Override
+    public void specialAttack(Player player) {
+        if (specialCooldown > 0) return;
+ 
+        player.applyDamage(20);
+ 
+     
+         if (meleeAnimation != null) currentAnimation = meleeAnimation;
+        if (currentAnimation != null){
+            currentAnimation.start();
+        }
+ 
+        specialCooldown = specialCooldownMax;
+ 
+        System.out.println("[ThirdBoss] Heavy melee! dmg" );
     }
 
 }

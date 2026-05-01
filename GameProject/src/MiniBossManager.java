@@ -10,6 +10,9 @@ public class MiniBossManager {
     private int attackTimer = 0;
     private int attackCooldown = 120;
 
+    private int[] specialTimers    = { 0, 0, 0, 0 };
+    private int[] specialIntervals = { 480, 600, 300, 360 };
+
     public static MiniBossManager getInstance() {
         if (instance == null)
             instance = new MiniBossManager();
@@ -40,6 +43,7 @@ public class MiniBossManager {
                 // Activate boss when player intersects its bounding rectangle
                 if (!boss.isStarted() && boss.getTriggerZone().intersects(playerRect)) {
                     boss.startFight(worldWidth);
+                    // boss.specialAttack(player);
                 }
 
                 double dist = Math.abs(boss.getBoundingRectangle().x - playerX);
@@ -50,6 +54,14 @@ public class MiniBossManager {
                     decideAttack(boss, dist);
                     attackTimer = 0;
                 }
+
+                        if (boss.isStarted()) {
+            specialTimers[i]++;
+            if (specialTimers[i] >= specialIntervals[i]) {
+                boss.specialAttack(player);
+                specialTimers[i] = 0;
+            }
+        }
 
             }
             boss.update(player);
