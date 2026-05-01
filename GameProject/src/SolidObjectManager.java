@@ -20,17 +20,23 @@ public class SolidObjectManager {
 		this.worldWidth = worldWidth;
 		this.worldHeight = worldHeight;
 
-		// solidObjects = new SolidObject[1];
+		// Setup Level 1 Solid Objects First
+		loadLevel(1);
+	}
 
-		// // Floor
-		// solidObjects[0] = new SolidObject (0, this.worldHeight - 10, this.worldWidth,
-		// 50, new Color(0, 0, 0, 0));
+	// Dynamically Update Solid Objects & Layout Based on Level
+	public void loadLevel(int level) {
+		if (level == 1) {
+			solidObjects = new SolidObject[NUM_FLOORS]; // NUM_FLOORS = 5
+			for (int i = 0; i < NUM_FLOORS; i++) {
+				int floorY = FLOOR_HEIGHT * (1 - i) - 10;
+				solidObjects[i] = new SolidObject(0, floorY, this.worldWidth, 50, new Color(0, 0, 0, 0));
+			}
+		}
 
-		solidObjects = new SolidObject[NUM_FLOORS]; // ← NEW constant NUM_FLOORS = 5
-
-		for (int i = 0; i < NUM_FLOORS; i++) {
-			int floorY = FLOOR_HEIGHT * (1 - i) - 10; // ← NEW formula, matches BackgroundManager stacking
-			solidObjects[i] = new SolidObject(0, floorY, this.worldWidth, 50, new Color(0, 0, 0, 0));
+		else if (level == 2) {
+			solidObjects = new SolidObject[1];
+			solidObjects[0] = new SolidObject(0, 1440 - 50, 2650, 50, new Color(0, 0, 0, 0));
 		}
 	}
 
