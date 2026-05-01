@@ -14,12 +14,12 @@ public class FourthBoss extends MiniBoss {
 
     @Override
     public void meleeAttack() {
-        currentAnimation = meleeAnimation;
+        if (meleeAnimation != null) currentAnimation = meleeAnimation;
     }
 
     @Override
     public void projectileAttack() {
-        currentAnimation = projectileAnimation;
+        if (projectileAnimation != null) currentAnimation = projectileAnimation;
 
         if (facingLeft) {
             dir = 1;

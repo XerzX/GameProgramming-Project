@@ -32,15 +32,22 @@ public class HealthDrop {
 	private boolean visible; // true once the potion has appeared on screen
 	private boolean active; // false after the player picks it up
 
+	private int width;
+	private int height;
+
 	/**
 	 * xPos world X position where the potion will appear
-	 * yPos world Y position where the potion will appear
+	 * floorY world Y ground position where the potion's bottom should rest
 	 */
-	public HealthDrop(int xPos, int yPos) {
-		this.xPos = xPos;
-		this.yPos = yPos;
-
+	public HealthDrop(int xPos, int floorY) {
 		sprite = ImageManager.getInstance().loadImage("/Assets/Collectable/HealthPotion.png");
+
+		// The user requested height scaled down to 1/5th
+		width = sprite.getIconWidth() / 5;
+		height = sprite.getIconHeight() / 5;
+
+		this.xPos = xPos;
+		this.yPos = floorY - height;
 
 		Random random = new Random();
 		spawnTimer = random.nextInt(SPAWN_TICKS_MIN, SPAWN_TICKS_MAX + 1);
@@ -76,12 +83,12 @@ public class HealthDrop {
 			return;
 
 		g2.drawImage(sprite.getImage(), xPos, yPos,
-				sprite.getIconWidth(), sprite.getIconHeight(), null);
+				width, height, null);
 	}
 
 	public Rectangle2D.Double getBoundingRectangle() {
 		return new Rectangle2D.Double(xPos, yPos,
-				sprite.getIconWidth(), sprite.getIconHeight());
+				width, height);
 	}
 
 	public boolean isActive() {

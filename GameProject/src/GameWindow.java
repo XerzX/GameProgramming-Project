@@ -113,8 +113,8 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 	// Updates The Position Of Game Entities
 	private void gameUpdate() {
 		player.update();
-    player.updateAnimation();
-		MiniBossManager.getInstance().update(worldWidth, player.getBoundingRectangle());
+		player.updateAnimation();
+		MiniBossManager.getInstance().update(worldWidth, player);
 	}
 
 	// Update Player Position

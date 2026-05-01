@@ -1,9 +1,9 @@
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
-import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 
 public class Player {
 
@@ -25,18 +25,19 @@ public class Player {
 	private StripAnimationHV walkAnimation;
 
 	// Idle Sprites
-	private ImageIcon defaultIdleSprite;
-	private ImageIcon meleeIdleSprite;
-	private ImageIcon rangedIdleSprite;
+	private BufferedImage defaultIdleSprite;
+	private BufferedImage meleeIdleSprite;
+	private BufferedImage rangedIdleSprite;
 
 	// Attack Sprites (static single-frame images)
-	private ImageIcon meleeAttackSprite;
-	private ImageIcon rangedAttackSprite;
+	private BufferedImage meleeAttackSprite;
+	private BufferedImage rangedAttackSprite;
 
 	// Counts down game ticks for how long the attack pose is displayed
-	// (30 ticks ≈ 500 ms at 60 fps). When it reaches 0, isAttacking clears.
+	// When it reaches 0, isAttacking clears.
 	private int attackTimer = 0;
-	private static final int ATTACK_DISPLAY_TICKS = 30;
+	private static final int MELEE_ATTACK_DISPLAY_TICKS = 30;
+	private static final int RANGED_ATTACK_DISPLAY_TICKS = 15;
 
 	// Counts down game ticks for how long the damage tint is shown
 	private int damageTimer = 0;
@@ -78,6 +79,10 @@ public class Player {
 	// This Represents The Player's Health
 	private int HP = 100;
 
+	private ArrayList<PaperBall> projectiles = new ArrayList<>();
+
+	private boolean spawnProjectile = false;
+
 	public Player(JFrame gameWindow, SolidObjectManager soManager, int worldWidth, int worldHeight) {
 
 		this.gameWindow = gameWindow;
@@ -98,22 +103,44 @@ public class Player {
 		height = 612 / 3;
 
 		// Load Idle Animations
-		defaultIdleSprite = imageManager.loadImage("/Assets/Player/TestPlayer.png");
-		meleeIdleSprite = imageManager.loadImage("/Assets/Player/MeleeIdle.png");
-		rangedIdleSprite = imageManager.loadImage("/Assets/Player/RangedIdle.png");
+		defaultIdleSprite = imageManager.loadBufferedImage("/Assets/Player/TestPlayer.png");
+		meleeIdleSprite = imageManager.loadBufferedImage("/Assets/Player/MeleeIdle.png");
+		rangedIdleSprite = imageManager.loadBufferedImage("/Assets/Player/RangedIdle.png");
 
 		// Load Walk Animation
 		walkAnimation = new StripAnimationHV(true, "/Assets/Player/Strip.png", 2, 4);
 
 		// Load Attack Sprites (single static images, displayed for a time equal to
 		// ATTACK_DISPLAY_TICKS)
-		meleeAttackSprite = imageManager.loadImage("/Assets/Player/Melee.png");
-		rangedAttackSprite = imageManager.loadImage("/Assets/Player/Ranged.png");
+		meleeAttackSprite = imageManager.loadBufferedImage("/Assets/Player/Melee.png");
+		rangedAttackSprite = imageManager.loadBufferedImage("/Assets/Player/Ranged.png");
+
+		// PRELOAD HEAVY ASSETS:
+		// Proactively instantiate a dummy paperball strip animation. This forces the
+		// JVM to unpack
+		// the heavy 16.8MB image file into memory during the boot sequence instead of
+		// during gameplay!
+		new StripAnimationHV(true, "/Assets/Projectiles/paperball.png", 24, 1);
 
 		elevatorManager = ElevatorManager.getInstance();
 	}
 
 	public void draw(Graphics2D g2) {
+
+		// Draw logic for projectiles
+		for (int i = 0; i < projectiles.size(); i++) {
+			projectiles.get(i).draw(g2);
+		}
+
+		// Attack Frame
+		if (isAttacking) {
+			if (state == PlayerState.MELEE) {
+				drawImage(g2, meleeAttackSprite);
+			} else if (state == PlayerState.RANGED) {
+				drawImage(g2, rangedAttackSprite);
+			}
+			return;
+		}
 
 		// Move Frame
 		if (!isIdle) {
@@ -121,21 +148,11 @@ public class Player {
 			return;
 		}
 
-		// Attack Frame
-		if (isAttacking) {
-			if (state == PlayerState.MELEE) {
-				drawImage(g2, meleeAttackSprite.getImage());
-			} else if (state == PlayerState.RANGED) {
-				drawImage(g2, rangedAttackSprite.getImage());
-			}
-			return;
-		}
-
 		// Idle Frame
 		switch (state) {
-			case MELEE -> drawImage(g2, meleeIdleSprite.getImage());
-			case RANGED -> drawImage(g2, rangedIdleSprite.getImage());
-			default -> drawImage(g2, defaultIdleSprite.getImage());
+			case MELEE -> drawImage(g2, meleeIdleSprite);
+			case RANGED -> drawImage(g2, rangedIdleSprite);
+			default -> drawImage(g2, defaultIdleSprite);
 		}
 	}
 
@@ -191,17 +208,23 @@ public class Player {
 
 		Rectangle2D.Double meleeHitBox = null;
 
+		int attackDamage = 10;
 		int attackRange = 100;
 		int attackHeight = 100;
 
 		if (facingLeft)
-			meleeHitBox = new Rectangle2D.Double(xPos + width, yPos + 100, attackRange, attackHeight);
-		else
 			meleeHitBox = new Rectangle2D.Double(xPos - attackRange, yPos + 100, attackRange, attackHeight);
+		else
+			meleeHitBox = new Rectangle2D.Double(xPos + width, yPos + 100, attackRange, attackHeight);
 
-		// Add Check For AttackHitBox Collision w/ Player Here
+		// Check For AttackHitBox Collision w/ Bosses
+		for (MiniBoss boss : MiniBossManager.getInstance().getBosses()) {
+			if (!boss.isDead() && meleeHitBox.intersects(boss.getBoundingRectangle())) {
+				boss.takeDamage(attackDamage);
+			}
+		}
 
-		attackTimer = ATTACK_DISPLAY_TICKS; // start countdown
+		attackTimer = MELEE_ATTACK_DISPLAY_TICKS; // start countdown
 	}
 
 	public void attackRanged() {
@@ -210,9 +233,9 @@ public class Player {
 		state = PlayerState.RANGED;
 		isAttacking = true;
 
-		// Call Projectile Start() Function Here
+		spawnProjectile = true;
 
-		attackTimer = ATTACK_DISPLAY_TICKS; // start countdown
+		attackTimer = RANGED_ATTACK_DISPLAY_TICKS; // start countdown
 	}
 
 	public void startAnimation() {
@@ -224,14 +247,10 @@ public class Player {
 	}
 
 	public void updateAnimation() {
-		// Update walk animation while the player is moving
 		if (!isIdle && walkAnimation.isAnimationActive()) {
 			walkAnimation.update();
 		}
 
-		// Count down the attack display timer each game tick.
-		// When it reaches 0 the attack pose ends and the
-		// matching idle sprite (MeleeIdle / RangedIdle) takes over.
 		if (isAttacking) {
 			attackTimer--;
 			if (attackTimer <= 0) {
@@ -240,8 +259,6 @@ public class Player {
 			}
 		}
 
-		// Count down the damage tint timer each game tick.
-		// When it reaches 0 the tinted sprite is discarded.
 		if (damageTimer > 0) {
 			damageTimer--;
 			if (damageTimer <= 0) {
@@ -278,6 +295,14 @@ public class Player {
 	}
 
 	public void update() {
+		if (spawnProjectile) {
+			int projX = facingLeft ? xPos - 50 : xPos + width;
+			PaperBall paperBall = new PaperBall(projX, yPos + 50, worldWidth, facingLeft);
+			paperBall.startAnimation();
+			projectiles.add(paperBall);
+			spawnProjectile = false;
+		}
+
 		// Apply Gravity/Jumping Physics
 		if (jumping || inAir) {
 			timeElapsed++;
@@ -301,6 +326,16 @@ public class Player {
 		checkFalling();
 
 		nearElevator = elevatorManager.isNearElevator(getBoundingRectangle());
+
+		// Manage Projectiles Update Loop
+		for (int i = projectiles.size() - 1; i >= 0; i--) {
+			PaperBall p = projectiles.get(i);
+			p.update();
+			p.checkCollision();
+			if (!p.isActive()) {
+				projectiles.remove(i);
+			}
+		}
 	}
 
 	public Rectangle2D.Double getBoundingRectangle() {
@@ -393,19 +428,18 @@ public class Player {
 	}
 
 	public void interactWithElevator() {
-    int targetSurfaceY = elevatorManager.tryInteract(getBoundingRectangle());
-    if (targetSurfaceY != Integer.MIN_VALUE) {
-        yPos = targetSurfaceY - height; // ← NEW: feet land exactly on floor surface
-        jumping         = false;
-        inAir           = false;
-        timeElapsed     = 0;
-        initialVelocity = 0;  // ← NEW: prevents leftover momentum
-        startY          = yPos; // ← NEW: anchors gravity formula to new position
-    }
-}
+		int targetSurfaceY = elevatorManager.tryInteract(getBoundingRectangle());
+		if (targetSurfaceY != Integer.MIN_VALUE) {
+			yPos = targetSurfaceY - height;
+			jumping = false;
+			inAir = false;
+			timeElapsed = 0;
+			initialVelocity = 0;
+			startY = yPos;
+		}
+	}
 
-
-public boolean isNearElevator() {
-    return elevatorManager.isNearElevator(getBoundingRectangle());
-}
+	public boolean isNearElevator() {
+		return elevatorManager.isNearElevator(getBoundingRectangle());
+	}
 }

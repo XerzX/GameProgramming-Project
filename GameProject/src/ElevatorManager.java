@@ -7,7 +7,7 @@ public class ElevatorManager {
     private Elevator[] elevators;
 
     private static final int FLOOR_HEIGHT = 672;
-    private static final int NUM_FLOORS   = 5;
+    private static final int NUM_FLOORS = 5;
 
     private static final int ELEV_W = 120;
     private static final int ELEV_H = 180;
@@ -23,12 +23,11 @@ public class ElevatorManager {
         elevators = new Elevator[NUM_FLOORS];
 
         for (int i = 0; i < NUM_FLOORS; i++) {
-          
+
             int floorSurfaceY = FLOOR_HEIGHT * (1 - i) - 10;
-            int elevY         = floorSurfaceY - ELEV_H;
+            int elevY = floorSurfaceY - ELEV_H;
 
-
-            int targetIndex    = (i + 1) % NUM_FLOORS; 
+            int targetIndex = (i + 1) % NUM_FLOORS;
             int targetSurfaceY = FLOOR_HEIGHT * (1 - targetIndex) - 10;
 
             System.out.println("Floor " + i + ": elevY=" + elevY
@@ -36,11 +35,10 @@ public class ElevatorManager {
                     + ", targetSurfaceY=" + targetSurfaceY);
 
             elevators[i] = new Elevator(
-                "/Assets/Elevator/elevator.png",
-                ELEV_X, elevY,
-                ELEV_W, ELEV_H,
-                targetSurfaceY  
-            );
+                    "/Assets/Elevator/elevator.png",
+                    ELEV_X, elevY,
+                    ELEV_W, ELEV_H,
+                    targetSurfaceY);
         }
     }
 
@@ -59,7 +57,8 @@ public class ElevatorManager {
 
     public boolean isNearElevator(Rectangle2D.Double playerRect) {
         for (Elevator e : elevators)
-            if (e.canInteract(playerRect)) return true;
+            if (e.canInteract(playerRect))
+                return true;
         return false;
     }
 }
