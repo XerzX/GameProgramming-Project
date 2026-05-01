@@ -48,6 +48,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 
 	// Level 2 Specific Entities
 	private Background levelTwoBackground;
+	private FinalBoss finalBoss;
 
 	public GameWindow() {
 		super("Graduation");
@@ -129,10 +130,17 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 		player.setLevel(newLevel);
 
 		if (newLevel == 2) {
-			// Update player boundaries so physics limits behave flawlessly in Office
+			// Update player boundaries so physics limits behave as expected in Office
 			player.setWorldDimensions(2560, 1440);
 			player.setXPos(150);
 			player.setYPos(1440 - player.getHeight());
+
+			// Spawn Final Boss Randomly In Right-Most Half of Level
+			int startX = (int) (1280 + Math.random() * 1120);
+			int startY = 1390 - 240;
+			finalBoss = new FinalBoss(startX, startY);
+			finalBoss.startFight(2560);
+			hud.setFinalBoss(finalBoss);
 		}
 	}
 
@@ -145,6 +153,10 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 			MiniBossManager.getInstance().update(worldWidth, player);
 		} else if (currLevel == 2) {
 			// Update Level 2 Enemies Here
+			if (finalBoss != null) {
+				finalBoss.chasePlayer(player.getXPos(), player.getYPos());
+				finalBoss.update(player);
+			}
 		}
 	}
 
@@ -201,21 +213,21 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 
 			if (camY > 0)
 				camY = 0;
-		} 
-		else if (currLevel == 2) {
-			// Level 2 Tracking (Smoothly tracks the player's Y position rather than snapping floors)
+		} else if (currLevel == 2) {
+			// Level 2 Tracking (Smoothly tracks the player's Y position rather than
+			// snapping floors)
 			camY = (player.getYPos() + (player.getHeight() / 2)) - (virtualHeight / 2);
 
-			if (camX < 0) 
+			if (camX < 0)
 				camX = 0;
-			
-			if (camY < 0) 
+
+			if (camY < 0)
 				camY = 0;
-			
-			if (camX > 2560 - virtualWidth) 
+
+			if (camX > 2560 - virtualWidth)
 				camX = 2560 - virtualWidth;
-			
-			if (camY > 1440 - virtualHeight) 
+
+			if (camY > 1440 - virtualHeight)
 				camY = 1440 - virtualHeight;
 		}
 
@@ -249,8 +261,12 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 			// Level 2 Rendering
 			levelTwoBackground.draw(imageContext);
 			soManager.draw(imageContext);
+
+			if (finalBoss != null) {
+				finalBoss.draw(imageContext);
+			}
+
 			player.draw(imageContext);
-			// Draw whatever else is on level 2
 		}
 
 		// Reset Translation For HUD/UI Elements

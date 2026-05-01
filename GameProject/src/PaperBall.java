@@ -5,7 +5,7 @@ public class PaperBall {
 
     private int xPos;
     private int yPos;
-    
+
     private int width = 50;
     private int height = 50;
 
@@ -85,6 +85,17 @@ public class PaperBall {
             stopAnimation();
             isActive = false;
             hitBoss.takeDamage(15);
+            return;
+        }
+
+        FinalBoss fb = FinalBoss.getInstance();
+        if (fb != null && fb.isStarted() && !fb.isDead()) {
+            Rectangle2D.Double paperBallRect = new Rectangle2D.Double(xPos, yPos, width, height);
+            if (paperBallRect.intersects(fb.getBoundingRectangle())) {
+                stopAnimation();
+                isActive = false;
+                fb.takeDamage(15);
+            }
         }
     }
 
