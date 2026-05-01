@@ -43,7 +43,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 	private int levelOneHeight = -(worldHeight * 4);
 
 	public GameWindow() {
-		super("Insert Title Here");
+		super("Graduation");
 		initFullScreen();
 
 		addKeyListener(this);
@@ -105,12 +105,16 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 		background = new Background("/Assets/Background/Floor1.png", 0, 0);
 		soManager = new SolidObjectManager(this, worldWidth, worldHeight);
 		player = new Player(this, soManager, worldWidth, worldHeight);
+		
+		ElevatorManager.getInstance();
+		MiniBossManager.getInstance();
 	}
 
 	// Updates The Position Of Game Entities
 	private void gameUpdate() {
 		player.update();
-		player.updateAnimation();
+    player.updateAnimation();
+		MiniBossManager.getInstance().update(worldWidth, player.getBoundingRectangle());
 	}
 
 	// Update Player Position
@@ -180,6 +184,8 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 		// 3 - Render Elevators
 		ElevatorManager.getInstance().draw(imageContext);
 
+		// 4 - Render Projectiles
+    
 		// 4 - "Press E" prompt if near elevator
 		if (player.isNearElevator()) {
 			imageContext.setColor(java.awt.Color.WHITE);
@@ -190,6 +196,8 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
 		// N - Render Player
 		player.draw(imageContext);
 
+		MiniBossManager.getInstance().draw(imageContext);
+		
 		// Reset Translation For HUD/UI Elements
 		imageContext.translate(camX, camY);
 

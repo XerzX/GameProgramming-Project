@@ -393,18 +393,19 @@ public class Player {
 	}
 
 	public void interactWithElevator() {
-		int targetSurfaceY = elevatorManager.tryInteract(getBoundingRectangle());
-		if (targetSurfaceY != Integer.MIN_VALUE) {
-			yPos = targetSurfaceY - height;
-			jumping = false;
-			inAir = false;
-			timeElapsed = 0;
-			initialVelocity = 0;
-			startY = yPos;
-		}
-	}
+    int targetSurfaceY = elevatorManager.tryInteract(getBoundingRectangle());
+    if (targetSurfaceY != Integer.MIN_VALUE) {
+        yPos = targetSurfaceY - height; // ← NEW: feet land exactly on floor surface
+        jumping         = false;
+        inAir           = false;
+        timeElapsed     = 0;
+        initialVelocity = 0;  // ← NEW: prevents leftover momentum
+        startY          = yPos; // ← NEW: anchors gravity formula to new position
+    }
+}
 
-	public boolean isNearElevator() {
-		return elevatorManager.isNearElevator(getBoundingRectangle());
-	}
+
+public boolean isNearElevator() {
+    return elevatorManager.isNearElevator(getBoundingRectangle());
+}
 }
