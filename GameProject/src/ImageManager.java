@@ -28,6 +28,7 @@ public class ImageManager {
 	    BufferedImage bi = null;
 
 	    try {
+			
 	        bi = ImageIO.read(getClass().getResource(path));
 	    } 
 	    catch (IOException | IllegalArgumentException e) {
