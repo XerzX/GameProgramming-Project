@@ -31,4 +31,15 @@ public class SecondBoss extends MiniBoss {
 
     }
 
+    @Override
+    public void specialAttack(Player player) {
+        // if (specialCooldown > 0) return;
+ 
+        player.freeze();
+ 
+        specialCooldown = specialCooldownMax;
+ 
+        System.out.println("[SecondBoss] Player frozen!");
+    }
+
 }

@@ -31,6 +31,9 @@ public class MiniBoss implements MiniBossBehaviour {
     protected int startBoundary = 300;
     protected boolean fightStarted = false;
 
+    protected int specialCooldown    = 0;
+    protected int specialCooldownMax = 300;
+
     // 1-based index (1 = FirstBoss … 4 = FourthBoss) used to pick the drop sprite
     private int bossIndex;
 
@@ -55,8 +58,7 @@ public class MiniBoss implements MiniBossBehaviour {
     }
 
     @Override
-    public void specialAttack() {
-    }
+    public void specialAttack(Player player) {}
 
     public void chasePlayer(int playerX, int playerY) {
 
@@ -128,6 +130,10 @@ public class MiniBoss implements MiniBossBehaviour {
         if (dead) {
             return;
         }
+
+        if (specialCooldown > 0) {
+    specialCooldown--;
+}
 
         if (currentAnimation != null)
             currentAnimation.update();
