@@ -234,6 +234,12 @@ public class Player {
 			}
 		}
 
+		// Check For AttackHitBox Collision w/ Final Boss
+		FinalBoss fb = FinalBoss.getInstance();
+		if (fb != null && fb.isStarted() && !fb.isDead() && meleeHitBox.intersects(fb.getBoundingRectangle())) {
+			fb.takeDamage(attackDamage);
+		}
+
 		attackTimer = MELEE_ATTACK_DISPLAY_TICKS; // start countdown
 	}
 

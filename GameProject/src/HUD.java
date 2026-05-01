@@ -54,6 +54,7 @@ public class HUD {
 
     private final Player player;
     private final MiniBossManager bossManager;
+    private FinalBoss finalBoss;
 
     public HUD(Player player, MiniBossManager bossManager) {
         this.player = player;
@@ -62,6 +63,10 @@ public class HUD {
         for (int i = 0; i < 4; i++) {
             dropIcons[i] = ImageManager.getInstance().loadImage(DROP_PATHS[i]);
         }
+    }
+
+    public void setFinalBoss(FinalBoss finalBoss) {
+        this.finalBoss = finalBoss;
     }
 
     /**
@@ -162,7 +167,12 @@ public class HUD {
     // 2 – BOSS HEALTH BAR
 
     private void drawBossHealthBar(Graphics2D g2, int vpWidth) {
-        // Find an active (started, not dead) boss on the current floor
+        if (finalBoss != null && finalBoss.isStarted() && !finalBoss.isDead()) {
+            drawFinalBossBar(g2, vpWidth);
+            return;
+        }
+
+        // Find an active (started, not dead) miniboss on the current floor
         MiniBoss activeBoss = findActiveBoss();
         if (activeBoss == null)
             return;
@@ -490,5 +500,73 @@ public class HUD {
             }
         }
         return null;
+    }
+
+    // -- Final Boss Bar Execution --
+    private void drawFinalBossBar(Graphics2D g2, int vpWidth) {
+        // Massive Boss Bar
+        int fbBarW = 900; 
+        int fbBarH = 40;
+        int fbBarX = (vpWidth - fbBarW) / 2;
+        int fbBarY = 60; // Lower than standard mini bosses for grander effect
+        int fbBarRadius = 16; 
+
+        drawBarShell(g2, fbBarX, fbBarY, fbBarW, fbBarH, fbBarRadius);
+
+        int maxHp = finalBoss.getMaxHP();
+        int curHp = Math.max(0, finalBoss.getHP());
+        float pct = (maxHp > 0) ? (curHp / (float) maxHp) : 0f;
+
+        // Custom fiery/molten colour scheme for final boss
+        Color fillStart, fillEnd;
+        if (pct >= 0.5f) {
+            fillStart = new Color(240, 60, 20);
+            fillEnd = new Color(255, 120, 30);
+        } else if (pct >= 0.25f) {
+            fillStart = new Color(200, 30, 10);
+            fillEnd = new Color(240, 60, 20);
+        } else {
+            // Danger pulsing bright red/orange
+            float pulse = getPulse(7f);
+            int r = (int) (200 + 55 * pulse);
+            fillStart = new Color(r, 10, 10);
+            fillEnd = new Color(Math.min(255, r + 40), 40, 10);
+        }
+
+        int fillW = (int) (fbBarW * pct);
+        if (fillW > 0) {
+            drawBarFill(g2, fbBarX, fbBarY, fillW, fbBarH, fbBarRadius, fillStart, fillEnd);
+        }
+
+        // Overdrive Glow
+        if (pct >= 0.85f) {
+            float shimmer = getPulse(2f);
+            int alpha = (int) (40 + 60 * shimmer);
+            drawGlowOverlay(g2, fbBarX, fbBarY, fillW, fbBarH, fbBarRadius,
+                    new Color(255, 160, 20, alpha));
+        } else if (pct < 0.25f && fillW > 0) {
+            float pulse = getPulse(7f);
+            int alpha = (int) (50 + 100 * pulse);
+            drawGlowOverlay(g2, fbBarX, fbBarY, fillW, fbBarH, fbBarRadius,
+                    new Color(255, 40, 10, alpha));
+        }
+
+        // HP Label
+        g2.setFont(new Font("Arial", Font.BOLD, 18));
+        drawBarLabel(g2, fbBarX, fbBarY, fbBarW, fbBarH, curHp + " / " + maxHp);
+
+        // Dominating Boss Name Title
+        g2.setFont(new Font("Arial", Font.BOLD, 28));
+        String title = finalBoss.getName();
+        FontMetrics fm = g2.getFontMetrics();
+        int titleX = fbBarX + (fbBarW - fm.stringWidth(title)) / 2;
+        int titleY = fbBarY - 12;
+
+        // Shadow
+        g2.setColor(new Color(0, 0, 0, 180));
+        g2.drawString(title, titleX + 2, titleY + 2);
+        // Text
+        g2.setColor(new Color(255, 230, 200));
+        g2.drawString(title, titleX, titleY);
     }
 }
