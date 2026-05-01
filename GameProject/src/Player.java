@@ -79,7 +79,8 @@ public class Player {
 	private boolean isAttacking = false;
 
 	private int freezeTimer = 0;
-private static final int FREEZE_DURATION = 120;
+	private static final int FREEZE_DURATION = 120;
+	private BufferedImage freezeTintedSprite = null;
 
 	// This Represents The Player's Health
 	private int HP = 100;
@@ -173,8 +174,13 @@ private static final int FREEZE_DURATION = 120;
 	private void drawImage(Graphics2D g2, Image img) {
 		currSprite = img;
 
-		// Substitute the tinted copy while the damage flash is active
-		Image drawImg = (damageTimer > 0 && tintedSprite != null) ? tintedSprite : img;
+		// Substitute the tinted copy while the damage flash or freeze is active
+		Image drawImg = img;
+		if (damageTimer > 0 && tintedSprite != null) {
+			drawImg = tintedSprite;
+		} else if (freezeTimer > 0 && freezeTintedSprite != null) {
+			drawImg = freezeTintedSprite;
+		}
 
 		if (facingLeft) {
 			// Mirror horizontally: draw from right edge leftward with negative width
@@ -316,9 +322,13 @@ private static final int FREEZE_DURATION = 120;
 	}
 
 	public void update() {
-		 if (freezeTimer > 0) {
-        freezeTimer--;
-        return; }
+		if (freezeTimer > 0) {
+			freezeTimer--;
+			if (freezeTimer <= 0) {
+				freezeTintedSprite = null;
+			}
+			return;
+		}
 
 		if (spawnProjectile) {
 			int projX = facingLeft ? xPos - 50 : xPos + width;
@@ -528,9 +538,13 @@ private static final int FREEZE_DURATION = 120;
 }
 
 
-public void freeze() {
-    freezeTimer = FREEZE_DURATION;
-}
+	public void freeze() {
+		freezeTimer = FREEZE_DURATION;
+		if (currSprite != null) {
+			BufferedImage playerSprite = ImageManager.getInstance().toBufferedImage(currSprite);
+			freezeTintedSprite = BlueTintFX.getInstance().apply(playerSprite);
+		}
+	}
 
 
 

@@ -17,6 +17,11 @@ public class MiniBoss implements MiniBossBehaviour {
     private BufferedImage tintedSprite = null;
     private static final int DAMAGE_TINT_TICKS = 20;
 
+    protected int specialWindupTimer = 0;
+    protected int goldGlowTimer = 0;
+    protected BufferedImage specialTintedSprite = null;
+    protected Player specialTarget = null;
+
     protected Animation walkAnimation;
     protected Animation meleeAnimation;
     protected Animation projectileAnimation;
@@ -119,6 +124,14 @@ public class MiniBoss implements MiniBossBehaviour {
     private HealthDrop healthDrop = null;
     private BossDrop   bossDrop   = null;
 
+    public void triggerSpecial(Player player) {
+        if (specialWindupTimer <= 0) {
+            specialTarget = player;
+            specialWindupTimer = 60; // 1 second windup phase before execute
+            goldGlowTimer = 180; // Glow during windup and 2s of post-attack leeway
+        }
+    }
+
     public void update(Player player) {
         if (healthDrop != null) {
             healthDrop.update(player);
@@ -132,8 +145,16 @@ public class MiniBoss implements MiniBossBehaviour {
         }
 
         if (specialCooldown > 0) {
-    specialCooldown--;
-}
+            specialCooldown--;
+        }
+
+        if (specialWindupTimer > 0) {
+            specialWindupTimer--;
+            if (specialWindupTimer <= 0 && specialTarget != null) {
+                specialAttack(specialTarget);
+                specialTarget = null;
+            }
+        }
 
         if (currentAnimation != null)
             currentAnimation.update();
@@ -142,6 +163,19 @@ public class MiniBoss implements MiniBossBehaviour {
             damageTimer--;
             if (damageTimer <= 0) {
                 tintedSprite = null;
+            }
+        }
+
+        if (goldGlowTimer > 0) {
+            goldGlowTimer--;
+            if (goldGlowTimer > 0 && currentAnimation != null) {
+                Image currentImage = currentAnimation.getImage();
+                if (currentImage != null) {
+                    BufferedImage sprite = ImageManager.getInstance().toBufferedImage(currentImage);
+                    specialTintedSprite = GoldTintFX.getInstance().apply(sprite);
+                }
+            } else {
+                specialTintedSprite = null;
             }
         }
     }
@@ -165,7 +199,12 @@ public class MiniBoss implements MiniBossBehaviour {
         if (frame == null)
             return;
 
-        Image drawFrame = (damageTimer > 0 && tintedSprite != null) ? tintedSprite : frame;
+        Image drawFrame = frame;
+        if (damageTimer > 0 && tintedSprite != null) {
+            drawFrame = tintedSprite;
+        } else if (goldGlowTimer > 0 && specialTintedSprite != null) {
+            drawFrame = specialTintedSprite;
+        }
 
         if (facingLeft)
             g2.drawImage(drawFrame, xPos, yPos, width, height, null);
