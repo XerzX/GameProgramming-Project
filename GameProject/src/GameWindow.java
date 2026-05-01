@@ -301,9 +301,6 @@ public class GameWindow extends JFrame implements Runnable, KeyListener,
                 player.interactWithElevator();
             }
 
-			if (code == KeyEvent.VK_Z) {   // Z key fires — change to whatever you prefer
-    player.fire();
-}
 
 		// if (code == KeyEvent.VK_C) {
 		// 	updateAttack(4);

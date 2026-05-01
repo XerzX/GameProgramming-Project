@@ -30,7 +30,7 @@ public class Player {
 	private int startY;
 	private int initialVelocity = 0;
 
-	private ProjectileManager projectileManager;
+	
 
 
 	/////////////////////////
@@ -39,7 +39,7 @@ public class Player {
 	
 	public Player(JFrame gameWindow, SolidObjectManager soManager) {
 
-		projectileManager = ProjectileManager.getInstance();
+	
 		
 		this.gameWindow = gameWindow;
 		this.soManager = soManager;
@@ -233,11 +233,8 @@ public boolean isNearElevator() {
     return elevatorManager.isNearElevator(getBoundingRectangle());
 }
 
-public void fire() {
-    int direction = facingLeft ? 1 : 2;
-    projectileManager.spawn(xPos, yPos, width, height, direction);
 }
-}
+
 
 
 // Add field:
