@@ -58,7 +58,7 @@ public class MiniBossManager {
                         if (boss.isStarted()) {
             specialTimers[i]++;
             if (specialTimers[i] >= specialIntervals[i]) {
-                boss.specialAttack(player);
+                boss.triggerSpecial(player);
                 specialTimers[i] = 0;
             }
         }
