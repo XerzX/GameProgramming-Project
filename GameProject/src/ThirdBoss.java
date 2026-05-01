@@ -31,7 +31,7 @@ public class ThirdBoss extends MiniBoss {
 
     public String getName() { return "Iron Crusher"; }
 
-    
+
 
     @Override
     public void specialAttack(Player player) {
@@ -49,7 +49,5 @@ public class ThirdBoss extends MiniBoss {
  
         System.out.println("[ThirdBoss] Heavy melee! dmg" );
     }
-
-
 
 }

@@ -31,7 +31,6 @@ public class FourthBoss extends MiniBoss {
      public String getName() { return "Shadow Tyrant"; }
 
      
-
     @Override
     public void projectileAttack() {
         if (projectileAnimation != null) currentAnimation = projectileAnimation;
